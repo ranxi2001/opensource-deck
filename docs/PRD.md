@@ -660,7 +660,7 @@ and issues may be observed through GitHub without adding client telemetry.
 - [x] Source-distributed CLI and Agent Skill.
 - Browser matrix and 500-item performance validation.
 - Security review and dependency audit.
-- `v0.1.0` release criteria and changelog.
+- [x] `v0.1.0` release criteria and changelog.
 
 ## 20. Risks And Mitigations
 

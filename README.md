@@ -1,17 +1,46 @@
-# OpenSourceDeck
+<p align="center">
+  <img src="docs/assets/readme-banner.png" alt="OpenSourceDeck - A personal command center for open-source contributions" />
+</p>
 
-OpenSourceDeck is a personal command center for open-source contributions. It
-turns GitHub issues, pull requests, reviews, and CI results into one navigable,
-action-oriented workspace.
+<p align="center">
+  <a href="https://onefly.top/opensource-deck/"><img src="https://img.shields.io/badge/live_dashboard-open-1f7a55?style=flat-square" alt="Open the live dashboard" /></a>
+  <a href="https://github.com/ranxi2001/opensource-deck/actions/workflows/ci.yml"><img src="https://github.com/ranxi2001/opensource-deck/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2f6feb?style=flat-square" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/Node.js-24%2B-3c873a?style=flat-square" alt="Node.js 24 or newer" />
+  <img src="https://img.shields.io/badge/GitHub_access-read--only-7357bd?style=flat-square" alt="Read-only GitHub access" />
+</p>
 
-> Status: v0.1 public mode is live at
-> [onefly.top/opensource-deck](https://onefly.top/opensource-deck/). Private
-> access requires a separately configured OAuth relay and is not enabled on the
-> public deployment.
+<p align="center">
+  Turn GitHub issues, pull requests, reviews, and CI results into one navigable,
+  action-oriented workspace.
+</p>
 
-![OpenSourceDeck desktop dashboard](docs/assets/dashboard-desktop.png)
+<p align="center">
+  <a href="https://onefly.top/opensource-deck/">Live dashboard</a> &middot;
+  <a href="#local-development">Quick start</a> &middot;
+  <a href="docs/ARCHITECTURE.md">Architecture</a> &middot;
+  <a href="docs/DEPLOYMENT.md">Deployment</a> &middot;
+  <a href="CHANGELOG.md">Changelog</a> &middot;
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
 
-## What It Does
+> [!NOTE]
+> **v0.1 public mode is live.** Private access requires a separately configured
+> OAuth relay and is not enabled on the public deployment.
+
+## Dashboard
+
+[![OpenSourceDeck desktop dashboard](docs/assets/dashboard-desktop.png)](https://onefly.top/opensource-deck/)
+
+<details>
+<summary>View the mobile workspace</summary>
+<br />
+<p align="center">
+  <img src="docs/assets/dashboard-mobile.png" width="390" alt="OpenSourceDeck mobile dashboard" />
+</p>
+</details>
+
+## Highlights
 
 - Discovers contribution work from GitHub account activity instead of a manual
   repository list.

@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommandPalette } from "./components/CommandPalette";
 import { AccountPanel } from "./components/AccountPanel";
+import { BrandMark } from "./components/BrandMark";
 import { DashboardToolbar } from "./components/DashboardToolbar";
 import { DetailPanel } from "./components/DetailPanel";
 import { Header } from "./components/Header";
@@ -332,9 +333,7 @@ export default function App() {
   if (!data && !error) {
     return (
       <main className="load-screen">
-        <span className="brand-mark">
-          <CircleDot size={20} />
-        </span>
+        <BrandMark />
         <LoaderCircle className="spin" size={22} />
         <p>正在加载开源贡献数据...</p>
       </main>

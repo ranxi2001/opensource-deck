@@ -4,12 +4,12 @@ import {
   LockKeyhole,
   Menu,
   Moon,
-  PanelsTopLeft,
   RefreshCw,
   Sun,
 } from "lucide-react";
 import type { DashboardData } from "../domain/schema";
 import { relativeTime } from "../domain/time";
+import { BrandMark } from "./BrandMark";
 
 interface HeaderProps {
   data: DashboardData;
@@ -48,9 +48,7 @@ export function Header({
         href={import.meta.env.BASE_URL}
         aria-label="OpenSourceDeck 首页"
       >
-        <span className="brand-mark" aria-hidden="true">
-          <PanelsTopLeft size={19} />
-        </span>
+        <BrandMark />
         <span className="brand-name">OpenSourceDeck</span>
       </a>
       <div className="header-context">

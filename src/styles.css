@@ -152,15 +152,12 @@ a {
 }
 
 .brand-mark {
-  display: inline-grid;
-  place-items: center;
+  display: block;
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
   border-radius: 6px;
-  color: #ffffff;
-  background: #1f7a55;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%);
+  object-fit: contain;
 }
 
 .brand-name {
