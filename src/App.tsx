@@ -2,7 +2,9 @@ import {
   AlertTriangle,
   CircleDot,
   GitPullRequest,
+  Lightbulb,
   LoaderCircle,
+  UserRoundCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommandPalette } from "./components/CommandPalette";
@@ -11,6 +13,8 @@ import { DashboardToolbar } from "./components/DashboardToolbar";
 import { DetailPanel } from "./components/DetailPanel";
 import { Header } from "./components/Header";
 import { ProjectSidebar } from "./components/ProjectSidebar";
+import { RecentIssueTable } from "./components/RecentIssueTable";
+import { RecentIssueToolbar } from "./components/RecentIssueToolbar";
 import { WorkTable } from "./components/WorkTable";
 import { loadDashboardData } from "./data/load-dashboard";
 import {
@@ -22,7 +26,12 @@ import {
 import { lookupPublicUser, publicUsernameIsValid } from "./data/public-lookup";
 import { STATE_LABELS } from "./domain/labels";
 import type { DashboardData, WorkItem, WorkState } from "./domain/schema";
-import { filterWorkItems, type WorkFilters } from "./domain/selectors";
+import {
+  filterRecentIssues,
+  filterWorkItems,
+  type RecentIssueFilters,
+  type WorkFilters,
+} from "./domain/selectors";
 import { isStale } from "./domain/time";
 
 const initialFilters: WorkFilters = {
@@ -32,6 +41,14 @@ const initialFilters: WorkFilters = {
   role: "all",
   query: "",
 };
+
+const initialIssueFilters: RecentIssueFilters = {
+  project: "all",
+  signal: "all",
+  query: "",
+};
+
+type DashboardView = "work" | "issues";
 
 type DataSource =
   | { mode: "snapshot" }
@@ -53,32 +70,82 @@ function initialDarkMode(): boolean {
 
 function DashboardSummary({
   data,
-  filters,
+  projectFilter,
+  view,
 }: {
   data: DashboardData;
-  filters: WorkFilters;
+  projectFilter: string | "all";
+  view: DashboardView;
 }) {
   const project =
-    filters.project === "all"
+    projectFilter === "all"
       ? null
       : data.projects.find(
-          (candidate) => candidate.repository === filters.project,
+          (candidate) => candidate.repository === projectFilter,
         );
+  const inProject = (repository: string) =>
+    projectFilter === "all" || repository === projectFilter;
+  if (view === "issues") {
+    const issues = data.recentIssues.filter((issue) =>
+      inProject(issue.repository),
+    );
+    const unassigned = issues.filter((issue) =>
+      issue.signals.includes("unassigned"),
+    ).length;
+    const contributionLabels = issues.filter((issue) =>
+      issue.signals.some((signal) =>
+        ["good_first_issue", "help_wanted"].includes(signal),
+      ),
+    ).length;
+    return (
+      <div className="summary-band">
+        <div className="summary-title">
+          {project ? (
+            <>
+              <img src={project.avatarUrl} alt="" />
+              <div>
+                <span className="eyebrow">{project.owner}</span>
+                <h1>{project.alias ?? project.name}</h1>
+              </div>
+            </>
+          ) : (
+            <div>
+              <span className="eyebrow">参与项目的公开动态</span>
+              <h1>近期可贡献 Issue</h1>
+            </div>
+          )}
+        </div>
+        <div className="summary-metrics" aria-label="近期 Issue 汇总">
+          <div>
+            <CircleDot size={16} />
+            <strong>{issues.length}</strong>
+            <span>近期 Issue</span>
+          </div>
+          <div>
+            <UserRoundCheck size={16} />
+            <strong>{unassigned}</strong>
+            <span>未指派</span>
+          </div>
+          <div>
+            <Lightbulb size={16} />
+            <strong>{contributionLabels}</strong>
+            <span>贡献友好标签</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const actionable = data.items.filter(
-    (item) =>
-      item.state === "needs_action" &&
-      (filters.project === "all" || item.repository === filters.project),
+    (item) => item.state === "needs_action" && inProject(item.repository),
   ).length;
   const waiting = data.items.filter(
-    (item) =>
-      item.state === "waiting_upstream" &&
-      (filters.project === "all" || item.repository === filters.project),
+    (item) => item.state === "waiting_upstream" && inProject(item.repository),
   ).length;
   const openPulls = data.items.filter(
     (item) =>
       item.type === "pull_request" &&
       item.sourceState === "open" &&
-      (filters.project === "all" || item.repository === filters.project),
+      inProject(item.repository),
   ).length;
   return (
     <div className="summary-band">
@@ -93,26 +160,26 @@ function DashboardSummary({
           </>
         ) : (
           <div>
-            <span className="eyebrow">Public contribution workspace</span>
-            <h1>All upstream work</h1>
+            <span className="eyebrow">开源贡献工作台</span>
+            <h1>我的上游贡献</h1>
           </div>
         )}
       </div>
-      <div className="summary-metrics" aria-label="Workspace totals">
+      <div className="summary-metrics" aria-label="贡献工作汇总">
         <div>
           <AlertTriangle size={16} />
           <strong>{actionable}</strong>
-          <span>need action</span>
+          <span>需要处理</span>
         </div>
         <div>
           <LoaderCircle size={16} />
           <strong>{waiting}</strong>
-          <span>waiting</span>
+          <span>等待上游</span>
         </div>
         <div>
           <GitPullRequest size={16} />
           <strong>{openPulls}</strong>
-          <span>open PRs</span>
+          <span>开放 PR</span>
         </div>
       </div>
       {project?.nextAction && (
@@ -131,6 +198,9 @@ export default function App() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountError, setAccountError] = useState<string | null>(null);
   const [filters, setFilters] = useState<WorkFilters>(initialFilters);
+  const [issueFilters, setIssueFilters] =
+    useState<RecentIssueFilters>(initialIssueFilters);
+  const [view, setView] = useState<DashboardView>("work");
   const [selected, setSelected] = useState<WorkItem | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -155,9 +225,7 @@ export default function App() {
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          cause instanceof Error
-            ? cause.message
-            : "Dashboard data could not be loaded.";
+          cause instanceof Error ? cause.message : "无法加载仪表盘数据。";
         if (hasData.current) setAccountError(message);
         else setError(message);
       })
@@ -223,6 +291,41 @@ export default function App() {
     () => filterWorkItems(data?.items ?? [], filters),
     [data?.items, filters],
   );
+  const visibleIssues = useMemo(
+    () => filterRecentIssues(data?.recentIssues ?? [], issueFilters),
+    [data?.recentIssues, issueFilters],
+  );
+  const issueCounts = useMemo(() => {
+    const scoped = filterRecentIssues(data?.recentIssues ?? [], {
+      ...issueFilters,
+      signal: "all",
+      query: "",
+    });
+    return {
+      all: scoped.length,
+      unassigned: scoped.filter((issue) => issue.signals.includes("unassigned"))
+        .length,
+      contribution_label: scoped.filter((issue) =>
+        issue.signals.some((signal) =>
+          ["good_first_issue", "help_wanted"].includes(signal),
+        ),
+      ).length,
+      assigned: scoped.filter((issue) => issue.signals.includes("assigned"))
+        .length,
+    };
+  }, [data?.recentIssues, issueFilters]);
+  const candidateCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        (data?.projects ?? []).map((project) => [
+          project.repository,
+          (data?.recentIssues ?? []).filter(
+            (issue) => issue.repository === project.repository,
+          ).length,
+        ]),
+      ),
+    [data?.projects, data?.recentIssues],
+  );
 
   if (!data && !error) {
     return (
@@ -231,7 +334,7 @@ export default function App() {
           <CircleDot size={20} />
         </span>
         <LoaderCircle className="spin" size={22} />
-        <p>Loading public contribution data...</p>
+        <p>正在加载开源贡献数据...</p>
       </main>
     );
   }
@@ -240,13 +343,13 @@ export default function App() {
     return (
       <main className="load-screen load-error">
         <AlertTriangle size={28} />
-        <h1>Dashboard data is unavailable</h1>
+        <h1>仪表盘数据暂不可用</h1>
         <p>{error}</p>
         <button
           type="button"
           onClick={() => setReloadKey((value) => value + 1)}
         >
-          Try again
+          重试
         </button>
       </main>
     );
@@ -271,10 +374,13 @@ export default function App() {
       />
       <ProjectSidebar
         projects={data.projects}
-        selected={filters.project}
+        selected={view === "work" ? filters.project : issueFilters.project}
+        view={view}
+        candidateCounts={candidateCounts}
         open={sidebarOpen}
         onSelect={(project) => {
           setFilters((current) => ({ ...current, project }));
+          setIssueFilters((current) => ({ ...current, project }));
           setSelected(null);
         }}
         onClose={() => setSidebarOpen(false)}
@@ -288,49 +394,90 @@ export default function App() {
             {stale ? <AlertTriangle size={17} /> : <CircleDot size={17} />}
             <span>
               {stale
-                ? "The last successful data artifact is older than two sync intervals."
+                ? "最近一次成功同步已超过两个同步周期。"
                 : data.warnings[0]}
             </span>
             {data.warnings.length > 1 && (
-              <small>+{data.warnings.length - 1} more</small>
+              <small>另有 {data.warnings.length - 1} 条</small>
             )}
           </div>
         )}
-        <DashboardSummary data={data} filters={filters} />
-        <DashboardToolbar
-          filters={filters}
-          counts={counts}
-          onChange={setFilters}
+        <DashboardSummary
+          data={data}
+          projectFilter={
+            view === "work" ? filters.project : issueFilters.project
+          }
+          view={view}
         />
+        <nav className="view-tabs" aria-label="工作台视图">
+          <button
+            type="button"
+            className={view === "work" ? "view-active" : ""}
+            onClick={() => setView("work")}
+          >
+            <GitPullRequest size={16} />
+            我的贡献
+          </button>
+          <button
+            type="button"
+            className={view === "issues" ? "view-active" : ""}
+            onClick={() => {
+              setView("issues");
+              setSelected(null);
+            }}
+          >
+            <CircleDot size={16} />
+            近期 Issue
+            <span>{data.recentIssues.length}</span>
+          </button>
+        </nav>
+        {view === "work" ? (
+          <DashboardToolbar
+            filters={filters}
+            counts={counts}
+            onChange={setFilters}
+          />
+        ) : (
+          <RecentIssueToolbar
+            filters={issueFilters}
+            counts={issueCounts}
+            onChange={setIssueFilters}
+          />
+        )}
         <div className="work-content">
           <div className="work-content-header">
             <span>
-              {visibleItems.length}{" "}
-              {visibleItems.length === 1 ? "item" : "items"}
+              {view === "work" ? visibleItems.length : visibleIssues.length} 项
             </span>
             <span>
-              {filters.state === "all"
-                ? "All states"
-                : STATE_LABELS[filters.state]}
+              {view === "work"
+                ? filters.state === "all"
+                  ? "全部状态"
+                  : STATE_LABELS[filters.state]
+                : "近 30 天内更新"}
             </span>
           </div>
-          <WorkTable
-            items={visibleItems}
-            selectedId={selected?.id ?? null}
-            onSelect={setSelected}
-          />
+          {view === "work" ? (
+            <WorkTable
+              items={visibleItems}
+              selectedId={selected?.id ?? null}
+              onSelect={setSelected}
+            />
+          ) : (
+            <RecentIssueTable issues={visibleIssues} />
+          )}
         </div>
         <footer className="app-footer">
-          <span>Public GitHub metadata only</span>
+          <span>仅使用 GitHub 元数据</span>
           <span aria-hidden="true">/</span>
-          <span>No upstream mutations</span>
+          <span>不会修改上游状态</span>
           <span className="footer-spacer" />
           <a
             href="https://github.com/ranxi2001/opensource-deck"
             target="_blank"
             rel="noreferrer noopener"
           >
-            Source on GitHub
+            GitHub 源码
           </a>
         </footer>
       </main>
@@ -344,12 +491,13 @@ export default function App() {
         onClose={() => setAccountOpen(false)}
         onPublicLookup={(username) => {
           if (!publicUsernameIsValid(username)) {
-            setAccountError("Enter a valid GitHub username.");
+            setAccountError("请输入有效的 GitHub 用户名。");
             return;
           }
           setReloading(true);
           setAccountError(null);
           setFilters(initialFilters);
+          setIssueFilters(initialIssueFilters);
           setSelected(null);
           setSource({ mode: "public", username: username.trim() });
           setAccountOpen(false);
@@ -358,6 +506,7 @@ export default function App() {
         onUseSnapshot={() => {
           setReloading(true);
           setFilters(initialFilters);
+          setIssueFilters(initialIssueFilters);
           setSelected(null);
           setSource({ mode: "snapshot" });
           setAccountOpen(false);
@@ -372,7 +521,7 @@ export default function App() {
             .catch((cause: unknown) => {
               setReloading(false);
               setAccountError(
-                cause instanceof Error ? cause.message : "Logout failed.",
+                cause instanceof Error ? cause.message : "退出登录失败。",
               );
             });
         }}

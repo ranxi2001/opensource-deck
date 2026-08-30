@@ -38,15 +38,15 @@ export function Header({
         className="icon-button mobile-only"
         type="button"
         onClick={onOpenProjects}
-        aria-label="Open projects"
-        title="Projects"
+        aria-label="打开项目列表"
+        title="项目"
       >
         <Menu size={19} />
       </button>
       <a
         className="brand"
         href={import.meta.env.BASE_URL}
-        aria-label="OpenSourceDeck home"
+        aria-label="OpenSourceDeck 首页"
       >
         <span className="brand-mark" aria-hidden="true">
           <PanelsTopLeft size={19} />
@@ -58,14 +58,14 @@ export function Header({
           className={`sync-indicator sync-${data.syncStatus}`}
           aria-hidden="true"
         />
-        <span>{data.projects.length} projects</span>
+        <span>{data.projects.length} 个项目</span>
         <span className="header-separator">/</span>
-        <span>{data.items.length} items</span>
+        <span>{data.items.length} 项贡献</span>
         <span className="header-separator">/</span>
-        <span>{data.accessMode} view</span>
+        <span>{data.accessMode === "private" ? "私有" : "公开"}视图</span>
         <span className="header-separator">/</span>
         <span title={new Date(data.generatedAt).toLocaleString()}>
-          synced {relativeTime(data.generatedAt)}
+          同步于 {relativeTime(data.generatedAt)}
         </span>
       </div>
       <div className="header-actions">
@@ -73,17 +73,17 @@ export function Header({
           className="command-button"
           type="button"
           onClick={onOpenCommand}
-          aria-label="Search projects and work"
+          aria-label="搜索项目和贡献"
         >
           <Command size={17} />
-          <span>Find anything</span>
+          <span>快速查找</span>
         </button>
         <button
           className="icon-button"
           type="button"
           onClick={onReload}
-          aria-label="Reload dashboard data"
-          title="Reload data"
+          aria-label="重新加载仪表盘数据"
+          title="重新加载"
           disabled={reloading}
         >
           <RefreshCw size={18} className={reloading ? "spin" : undefined} />
@@ -92,8 +92,8 @@ export function Header({
           className="icon-button"
           type="button"
           onClick={onToggleTheme}
-          aria-label={dark ? "Use light theme" : "Use dark theme"}
-          title={dark ? "Light theme" : "Dark theme"}
+          aria-label={dark ? "切换到浅色主题" : "切换到深色主题"}
+          title={dark ? "浅色主题" : "深色主题"}
         >
           {dark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
@@ -101,7 +101,7 @@ export function Header({
           className="profile-link profile-button"
           type="button"
           onClick={onOpenAccount}
-          aria-label="Change GitHub data access"
+          aria-label="切换 GitHub 数据来源"
           title={`${data.sourceUser.login} / ${data.accessMode}`}
         >
           <img src={data.sourceUser.avatarUrl} alt="" />

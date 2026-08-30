@@ -15,6 +15,9 @@ action-oriented workspace.
 
 - Discovers contribution work from GitHub account activity instead of a manual
   repository list.
+- Uses Chinese as the default interface language.
+- Finds open issues updated in the last 30 days across recently active projects,
+  with repository, keyword, assignment, and contribution-label filters.
 - Groups work by full `owner/name` repository identity.
 - Separates Needs action, Waiting upstream, Active, Completed, and Snoozed work.
 - Explains every state with deterministic source facts and reason codes.
@@ -31,6 +34,12 @@ Enter any GitHub username in the account panel. The browser performs a limited,
 anonymous, read-only lookup of recent public activity. The live view is capped
 at 20 recently active repositories and omits per-item CI, review, and comment
 enrichment to stay within anonymous API limits.
+
+Recent-issue discovery scans the first 8 of those repositories. Authenticated
+collection scans up to 20 repositories. Candidates use only public signals such
+as assignees, `good first issue`, and `help wanted`. An unassigned issue is not
+guaranteed to be unclaimed; check its discussion and contribution policy before
+starting work.
 
 The deployed snapshot for the repository owner is generated hourly by GitHub
 Actions with the repository-scoped `GITHUB_TOKEN`. It contains public data only.
@@ -73,7 +82,7 @@ npx playwright install --with-deps chromium
 npm run test:e2e
 ```
 
-`npm run check` covers formatting, lint, TypeScript, 20 unit/component/security
+`npm run check` covers formatting, lint, TypeScript, unit/component/security
 tests, production build, and a Cloudflare Worker dry-run. Playwright covers
 desktop and mobile interactions, Axe accessibility checks, and horizontal
 overflow.

@@ -10,7 +10,7 @@ const units = [
 
 export function relativeTime(iso: string, now = new Date()): string {
   const target = new Date(iso);
-  if (Number.isNaN(target.valueOf())) return "unknown";
+  if (Number.isNaN(target.valueOf())) return "未知";
   let value = (target.valueOf() - now.valueOf()) / 1000;
   let unit: Intl.RelativeTimeFormatUnit = "second";
   for (const [threshold, candidate] of units) {
@@ -18,7 +18,7 @@ export function relativeTime(iso: string, now = new Date()): string {
     if (Math.abs(value) < threshold) break;
     value /= threshold;
   }
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+  return new Intl.RelativeTimeFormat("zh-CN", { numeric: "auto" }).format(
     Math.round(value),
     unit,
   );

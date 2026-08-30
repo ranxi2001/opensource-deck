@@ -10,6 +10,8 @@ import {
   type ChecksSummary,
   type DashboardData,
   type DeckConfig,
+  type IssueSignal,
+  type RecentIssue,
   type Role,
   type WorkItem,
 } from "../../src/domain/schema";
@@ -29,8 +31,63 @@ interface SearchIssue {
   closed_at: string | null;
   labels: Array<{ name?: string } | string>;
   assignees?: Array<{ login: string }>;
+  comments?: number;
   pull_request?: { merged_at?: string | null };
   draft?: boolean;
+}
+
+const GOOD_FIRST_ISSUE_LABELS = new Set([
+  "good first issue",
+  "good-first-issue",
+  "good_first_issue",
+]);
+const HELP_WANTED_LABELS = new Set(["help wanted", "help-wanted"]);
+const NEEDS_TRIAGE_LABELS = new Set(["needs triage", "needs-triage"]);
+
+function toRecentIssue(item: SearchIssue): RecentIssue {
+  const labels = item.labels.map(labelName).filter(Boolean);
+  const normalizedLabels = new Set(
+    labels.map((label) => label.toLocaleLowerCase()),
+  );
+  const assignees = (item.assignees ?? []).map((assignee) => assignee.login);
+  const signals: IssueSignal[] = [
+    assignees.length === 0 ? "unassigned" : "assigned",
+  ];
+  if ([...normalizedLabels].some((label) => GOOD_FIRST_ISSUE_LABELS.has(label)))
+    signals.push("good_first_issue");
+  if ([...normalizedLabels].some((label) => HELP_WANTED_LABELS.has(label)))
+    signals.push("help_wanted");
+  if ([...normalizedLabels].some((label) => NEEDS_TRIAGE_LABELS.has(label)))
+    signals.push("needs_triage");
+  return {
+    id: item.node_id || String(item.id),
+    url: item.html_url,
+    repository: repositoryFromApiUrl(item.repository_url),
+    number: item.number,
+    title: item.title,
+    author: item.user?.login ?? "ghost",
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    labels,
+    assignees,
+    comments: item.comments ?? 0,
+    signals,
+  };
+}
+
+async function recentIssuesForRepository(
+  client: GitHubClient,
+  repository: string,
+  since: string,
+): Promise<RecentIssue[]> {
+  const response = await client.get<SearchResponse>("/search/issues", {
+    q: `repo:${repository} is:issue is:open updated:>=${since}`,
+    per_page: 12,
+    page: 1,
+    sort: "updated",
+    order: "desc",
+  });
+  return response.items.filter((item) => !item.pull_request).map(toRecentIssue);
 }
 
 interface SearchResponse {
@@ -299,11 +356,11 @@ async function searchAll(
     });
     results.push(...response.items);
     if (response.incomplete_results)
-      warnings.push(`Search was incomplete for role ${query.role}.`);
+      warnings.push(`角色 ${query.role} 的搜索结果不完整。`);
     if (response.items.length < 100) break;
     if (page === 10 && response.total_count > results.length) {
       warnings.push(
-        `Search result cap reached for role ${query.role}; older items may be omitted.`,
+        `角色 ${query.role} 的搜索已达到结果上限，较早项目可能被省略。`,
       );
     }
   }
@@ -348,8 +405,7 @@ async function repositoryMetadata(
     metadata: {
       repository,
       visibility: isPublic ? "public" : "private",
-      description:
-        response.description ?? "No repository description provided.",
+      description: response.description ?? "该仓库暂未提供简介。",
       url: response.html_url,
       avatarUrl: response.owner.avatar_url,
       forkUrl,
@@ -385,7 +441,7 @@ async function enrichItem(
     }
   } catch (error) {
     warnings.push(
-      `Comments unavailable: ${error instanceof Error ? error.message : "unknown error"}`,
+      `评论不可用：${error instanceof Error ? error.message : "未知错误"}`,
     );
   }
 
@@ -406,7 +462,7 @@ async function enrichItem(
         )
         .catch((error) => {
           warnings.push(
-            `Checks unavailable: ${error instanceof Error ? error.message : "unknown error"}`,
+            `检查状态不可用：${error instanceof Error ? error.message : "未知错误"}`,
           );
           return { total_count: 0, check_runs: [] } satisfies CheckRunsResponse;
         }),
@@ -419,7 +475,7 @@ async function enrichItem(
         )
         .catch((error) => {
           warnings.push(
-            `Reviews unavailable: ${error instanceof Error ? error.message : "unknown error"}`,
+            `审阅数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
           );
           return [];
         }),
@@ -470,7 +526,7 @@ async function enrichItem(
     };
   } catch (error) {
     warnings.push(
-      `Pull request unavailable: ${error instanceof Error ? error.message : "unknown error"}`,
+      `Pull Request 数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
     );
     return { ...item, latestActivity: newestActivity(activities), warnings };
   }
@@ -563,7 +619,7 @@ export async function collectDashboard(
         return await repositoryMetadata(client, repository, user);
       } catch (error) {
         warnings.push(
-          `Repository metadata unavailable for ${repository}: ${error instanceof Error ? error.message : "unknown error"}`,
+          `仓库 ${repository} 的元数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
         );
         return null;
       }
@@ -595,7 +651,7 @@ export async function collectDashboard(
 
   if (browserLimited) {
     warnings.push(
-      "Live public lookup is limited to 20 recently active repositories and omits per-item CI, review, and comment enrichment.",
+      "公开账户查询最多处理 20 个近期活跃仓库，其中前 8 个仓库用于发现候选 Issue；同时省略逐项 CI、审阅和评论补充数据。",
     );
   }
   const enriched = browserLimited
@@ -621,6 +677,42 @@ export async function collectDashboard(
   );
   const items = mergeWorkItems(retained);
   const projects = buildProjects(items, metadata, config.projects);
+  const recentIssueSince = new Date(now.valueOf() - 30 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const recentIssueRepositories = projects
+    .slice(0, browserLimited ? 8 : 20)
+    .map((project) => project.repository);
+  const knownIssueUrls = new Set(
+    items.filter((item) => item.type === "issue").map((item) => item.url),
+  );
+  const recentIssueResults = await mapLimit(
+    recentIssueRepositories,
+    browserLimited ? 3 : (options.concurrency ?? 6),
+    async (repository) => {
+      try {
+        return await recentIssuesForRepository(
+          client,
+          repository,
+          recentIssueSince,
+        );
+      } catch (error) {
+        warnings.push(
+          `近期 Issue 获取失败（${repository}）：${error instanceof Error ? error.message : "未知错误"}`,
+        );
+        return [];
+      }
+    },
+  );
+  const recentIssues = recentIssueResults
+    .flat()
+    .filter((issue) => !knownIssueUrls.has(issue.url))
+    .sort(
+      (left, right) =>
+        new Date(right.updatedAt).valueOf() -
+        new Date(left.updatedAt).valueOf(),
+    )
+    .slice(0, browserLimited ? 80 : 160);
   const profile = await client.get<UserResponse>(`/users/${user}`);
   const result: DashboardData = {
     schemaVersion: "1.0",
@@ -639,6 +731,7 @@ export async function collectDashboard(
     },
     projects,
     items,
+    recentIssues,
     syncStatus: warnings.length > 0 ? "partial" : "success",
     rateLimit: client.getRateLimit(),
     warnings: [...new Set(warnings)],

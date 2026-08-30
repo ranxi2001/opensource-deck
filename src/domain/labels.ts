@@ -1,37 +1,55 @@
 import type { ReasonCode, Role, WorkState } from "./schema";
 
 export const STATE_LABELS: Record<WorkState, string> = {
-  needs_action: "Needs action",
-  waiting_upstream: "Waiting upstream",
-  active: "Active",
-  completed: "Completed",
-  snoozed: "Snoozed",
-  unknown: "Unknown",
+  needs_action: "需要处理",
+  waiting_upstream: "等待上游",
+  active: "进行中",
+  completed: "已完成",
+  snoozed: "已暂缓",
+  unknown: "未知",
 };
 
 export const REASON_LABELS: Record<ReasonCode, string> = {
-  manual_snooze: "Snoozed by public configuration",
-  manual_waiting: "Waiting state set by public configuration",
-  manual_active: "Active state set by public configuration",
-  item_merged: "Pull request merged",
-  item_closed: "Issue or pull request closed",
-  ci_failure: "Current head has a failing check",
-  ci_pending: "Current head has checks in progress",
-  changes_requested: "A reviewer requested changes",
-  review_requested: "Your review was requested",
-  assigned_external_update: "Assigned item has a newer external activity",
-  mentioned_external_update: "Mentioned item has a newer external activity",
-  merge_conflict: "Pull request reports a merge conflict",
-  last_activity_by_user: "Last visible relevant activity is yours",
-  open_unowned: "Open with no confirmed next-action owner",
-  data_incomplete: "Some enrichment data was unavailable",
+  manual_snooze: "已通过公开配置暂缓",
+  manual_waiting: "已通过公开配置设为等待上游",
+  manual_active: "已通过公开配置设为进行中",
+  item_merged: "Pull Request 已合并",
+  item_closed: "Issue 或 Pull Request 已关闭",
+  ci_failure: "当前提交存在失败检查",
+  ci_pending: "当前提交仍有检查在运行",
+  changes_requested: "审阅者要求修改",
+  review_requested: "有人请求你进行审阅",
+  assigned_external_update: "已指派项目出现了新的外部活动",
+  mentioned_external_update: "提及你的项目出现了新的外部活动",
+  merge_conflict: "Pull Request 存在合并冲突",
+  last_activity_by_user: "最近一次可见相关活动来自你",
+  open_unowned: "尚未确认下一步由谁处理",
+  data_incomplete: "部分补充数据不可用",
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  author: "Author",
-  assignee: "Assigned",
-  review_requested: "Review requested",
-  reviewed: "Reviewed",
-  mentioned: "Mentioned",
-  involved: "Involved",
+  author: "作者",
+  assignee: "被指派",
+  review_requested: "待审阅",
+  reviewed: "已审阅",
+  mentioned: "被提及",
+  involved: "已参与",
 };
+
+const SOURCE_FACT_LABELS: Record<string, string> = {
+  "Authored pull request": "你创建了这个 Pull Request",
+  "Authored issue": "你创建了这个 Issue",
+  "Assigned open issue": "这个开放 Issue 已指派给你",
+  "Review requested": "有人请求你审阅",
+  "Reviewed pull request": "你审阅过这个 Pull Request",
+  "Recent involvement": "你近期参与过讨论",
+  "Current head checks passed": "当前提交的检查已通过",
+  "Current head has a failing check": "当前提交存在失败检查",
+  "Current head has checks in progress": "当前提交仍有检查在运行",
+  "Last visible relevant activity is yours": "最近一次可见相关活动来自你",
+  "Pull request merged": "Pull Request 已合并",
+};
+
+export function sourceFactLabel(fact: string): string {
+  return SOURCE_FACT_LABELS[fact] ?? fact;
+}

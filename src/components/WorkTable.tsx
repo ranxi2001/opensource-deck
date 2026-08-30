@@ -21,12 +21,12 @@ interface WorkTableProps {
 function Checks({ item }: { item: WorkItem }) {
   const label =
     item.checks.status === "failure"
-      ? `${item.checks.failure} failing checks`
+      ? `${item.checks.failure} 项检查失败`
       : item.checks.status === "pending"
-        ? `${item.checks.pending} pending checks`
+        ? `${item.checks.pending} 项检查进行中`
         : item.checks.status === "success"
-          ? `${item.checks.success} successful checks`
-          : "Checks unavailable";
+          ? `${item.checks.success} 项检查成功`
+          : "检查状态不可用";
   return (
     <span
       className={`checks checks-${item.checks.status}`}
@@ -49,28 +49,21 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
     return (
       <div className="empty-state">
         <CheckCircle2 size={28} />
-        <h3>No work matches this view</h3>
-        <p>
-          Change the queue, project, or filters to inspect other public
-          activity.
-        </p>
+        <h3>当前视图没有匹配的贡献</h3>
+        <p>可以切换队列、项目或筛选条件，查看其他公开活动。</p>
       </div>
     );
   }
 
   return (
-    <div
-      className="work-table"
-      role="table"
-      aria-label="Contribution work items"
-    >
+    <div className="work-table" role="table" aria-label="开源贡献项目">
       <div className="work-header" role="row">
-        <span role="columnheader">Work item</span>
-        <span role="columnheader">Your role</span>
-        <span role="columnheader">Signal</span>
-        <span role="columnheader">Updated</span>
+        <span role="columnheader">贡献项目</span>
+        <span role="columnheader">你的角色</span>
+        <span role="columnheader">状态信号</span>
+        <span role="columnheader">更新时间</span>
         <span role="columnheader" className="sr-only">
-          Open
+          打开
         </span>
       </div>
       <div role="rowgroup">
@@ -100,7 +93,7 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
                   <span className="work-repo">
                     {item.repository}
                     <span>#{item.number}</span>
-                    {item.draft && <span className="draft-label">Draft</span>}
+                    {item.draft && <span className="draft-label">草稿</span>}
                   </span>
                   <strong>{item.title}</strong>
                   <span className="mobile-work-meta">
@@ -132,12 +125,12 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
             <div
               className="work-updated"
               role="cell"
-              title={new Date(item.updatedAt).toLocaleString()}
+              title={new Date(item.updatedAt).toLocaleString("zh-CN")}
             >
               <Clock3 size={14} aria-hidden="true" />
               <span>{relativeTime(item.updatedAt)}</span>
               {item.latestActivity?.kind === "commented" && (
-                <MessageSquareText size={13} aria-label="Recent comment" />
+                <MessageSquareText size={13} aria-label="近期评论" />
               )}
             </div>
             <div className="row-open-cell" role="cell">
@@ -146,8 +139,8 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
                 href={item.links.item}
                 target="_blank"
                 rel="noreferrer noopener"
-                title="Open on GitHub"
-                aria-label={`Open ${item.repository} #${item.number} on GitHub`}
+                title="在 GitHub 打开"
+                aria-label={`在 GitHub 打开 ${item.repository} #${item.number}`}
               >
                 <ExternalLink size={16} />
               </a>

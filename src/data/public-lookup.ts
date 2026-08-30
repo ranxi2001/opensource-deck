@@ -13,7 +13,7 @@ export async function lookupPublicUser(
 ): Promise<DashboardData> {
   const normalized = username.trim();
   if (!publicUsernameIsValid(normalized)) {
-    throw new Error("Enter a valid GitHub username.");
+    throw new Error("请输入有效的 GitHub 用户名。");
   }
   const config: DeckConfig = {
     schemaVersion: 1,

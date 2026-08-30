@@ -555,6 +555,61 @@ a {
   font-size: 12px;
 }
 
+.view-tabs {
+  min-height: 44px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.view-tabs button {
+  position: relative;
+  height: 43px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.view-tabs button::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: -1px;
+  left: 10px;
+  height: 2px;
+  background: transparent;
+}
+
+.view-tabs button:hover,
+.view-tabs .view-active {
+  color: var(--ink);
+}
+
+.view-tabs .view-active::after {
+  background: var(--accent);
+}
+
+.view-tabs button > span {
+  min-width: 20px;
+  height: 19px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 5px;
+  color: var(--muted);
+  background: var(--surface-muted);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .dashboard-toolbar {
   position: sticky;
   top: 62px;
@@ -693,6 +748,15 @@ a {
   color: var(--muted);
 }
 
+.issue-signal-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .work-content {
   min-height: 300px;
   flex: 1;
@@ -719,6 +783,48 @@ a {
   display: grid;
   grid-template-columns: minmax(320px, 1fr) 138px 180px 128px 36px;
   align-items: center;
+}
+
+.issue-header,
+.issue-row {
+  grid-template-columns: minmax(320px, 1fr) 220px 180px 128px 36px;
+}
+
+.issue-main {
+  text-decoration: none;
+}
+
+.issue-signals span.signal-good_first_issue,
+.issue-signals span.signal-help_wanted {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+}
+
+.issue-signals span.signal-unassigned {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: color-mix(in srgb, var(--blue) 28%, var(--border));
+}
+
+.issue-participation {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 10px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.issue-participation > span {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .work-header {
@@ -1662,6 +1768,10 @@ a {
   .row-open {
     grid-column: 4;
   }
+
+  .issue-participation {
+    grid-column: 2;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1782,6 +1892,10 @@ a {
     top: 58px;
   }
 
+  .view-tabs {
+    padding: 0 8px;
+  }
+
   .queue-tabs {
     justify-content: space-between;
     gap: 0;
@@ -1817,6 +1931,11 @@ a {
   .clear-filter-button {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+
+  .issue-signal-note {
+    grid-column: 1 / -1;
+    margin-left: 0;
   }
 
   .work-content {
@@ -1859,7 +1978,8 @@ a {
 
   .work-roles,
   .work-signal,
-  .work-updated {
+  .work-updated,
+  .issue-participation {
     display: none;
   }
 
@@ -1929,7 +2049,7 @@ a {
     text-overflow: ellipsis;
   }
 
-  .header-actions [aria-label="Reload dashboard data"] {
+  .header-actions [aria-label="重新加载仪表盘数据"] {
     display: none;
   }
 

@@ -30,7 +30,9 @@ only in an authenticated response and browser memory.
 
 `src/domain/schema.ts` owns runtime-validated contracts for configuration,
 projects, work items, generated dashboard data, states, roles, checks, and
-reason codes. The schema version is independent from the package version.
+reason codes. It also validates recent issue candidates and their public
+assignment or contribution-label signals. The schema version is independent
+from the package version.
 
 `classifier.ts` is pure and deterministic. Terminal state wins first. Manual
 overrides can choose Snoozed, Active, or Waiting upstream without suppressing
@@ -57,7 +59,10 @@ concurrency and explicit pagination. Optional enrichment failures become
 warnings and never turn missing CI into success.
 
 Browser public lookup is intentionally limited to 20 recently active
-repositories and skips per-item enrichment to stay within anonymous limits.
+repositories and skips per-item enrichment to stay within anonymous limits. It
+scans the first 8 repositories for open issues updated within 30 days; full
+collection scans at most 20. Issues already present in the contribution
+workspace are excluded from the candidate list.
 
 The sync command writes a temporary file and atomically renames it to the output
 path. Live local output is ignored by Git.
@@ -68,7 +73,9 @@ The React/Vite application parses every input artifact with Zod before render.
 GitHub text is rendered as text, not raw HTML. The interface uses a stable
 desktop grid and responsive mobile list, actual repository avatars, project and
 queue navigation, composite filters, detail views, command search, theme
-selection, and safe external links.
+selection, and safe external links. Simplified Chinese is the default UI. A
+separate recent-issue view filters public assignment and contribution-label
+signals without interpreting them as ownership or acceptance.
 
 The frontend has no GitHub write operation. Reload means re-fetching the active
 data source, not rerunning CI or mutating notifications.

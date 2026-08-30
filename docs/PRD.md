@@ -68,6 +68,8 @@ needs one place to find pending reviews and work that has become blocked.
   transition on the next sync.
 - When work is merged or closed, keep a short recent history and then remove it
   from the active workspace.
+- When I want to start a new contribution, show recently updated issues in
+  projects I already follow and let me filter by public contribution signals.
 
 ## 4. Goals
 
@@ -81,6 +83,7 @@ needs one place to find pending reviews and work that has become blocked.
 6. Support private repositories through an optional token-protecting OAuth
    relay without persisting private data.
 7. Keep public setup fork-friendly and safe for public repositories.
+8. Use Simplified Chinese as the default product language.
 
 ## 5. Non-Goals For v0.1
 
@@ -198,6 +201,27 @@ The primary interface provides these queues:
 `Unknown` is a data quality state, not a user-facing success state. Unknown
 items remain accessible and display the missing facts.
 
+### 7.5 Recent Issue Discovery
+
+The secondary workspace discovers open issues updated within the last 30 days
+from repositories found through the user's recent contribution activity. It:
+
+- excludes issues already present in the user's contribution workspace;
+- retains repository, author, labels, assignees, comment count, and timestamps;
+- derives only inspectable signals: unassigned, assigned, `good first issue`,
+  `help wanted`, and `needs triage`;
+- supports repository, keyword, assignment, and contribution-label filters;
+- links directly to GitHub and never claims or mutates an issue.
+
+The UI must state that these are public screening signals. `unassigned` does
+not mean nobody is already working on an issue, and a contribution-friendly
+label does not guarantee that a proposed pull request will be accepted.
+
+Full collection scans at most 20 recently active repositories and retains at
+most 160 issue candidates. Anonymous browser lookup scans the first 8
+repositories and retains at most 80 candidates to remain within GitHub's public
+API limits.
+
 ## 8. State Classification Contract
 
 Classification is deterministic and follows this precedence:
@@ -247,6 +271,10 @@ that a maintainer has accepted responsibility or promised a response.
 | FR-018 | Accept any valid GitHub username for bounded public browser lookup                | Must     |
 | FR-019 | Support GitHub OAuth private-repository data through a server-side relay          | Must     |
 | FR-020 | Keep private tokens and data out of browser JavaScript and Pages artifacts        | Must     |
+| FR-021 | Use Simplified Chinese as the default interface language                          | Must     |
+| FR-022 | Discover open issues updated within 30 days in recently active repositories       | Must     |
+| FR-023 | Filter issue candidates by repository, keyword, assignment, and public labels     | Must     |
+| FR-024 | Explain that issue-candidate signals do not establish ownership or acceptance     | Must     |
 
 ## 10. Information Architecture
 
@@ -254,6 +282,7 @@ that a maintainer has accepted responsibility or promised a response.
 
 - Left navigation: project list, project status counts, and pin state.
 - Top bar: search, queue selector, sync freshness, and data warning indicator.
+- Primary view switch: My Contributions and Recent Issues.
 - Main region: dense work-item table optimized for scanning.
 - Detail drawer or inline expansion: reasons, roles, labels, checks, and quick
   links.
@@ -324,6 +353,7 @@ sourceUser
 lookback
 projects[]
 items[]
+recentIssues[]
 syncStatus
 rateLimit
 warnings[]
@@ -353,6 +383,23 @@ reviewDecision
 checksSummary
 links
 sourceFacts
+```
+
+Each recent issue contains at least:
+
+```text
+id
+url
+repository
+number
+title
+author
+createdAt
+updatedAt
+labels[]
+assignees[]
+comments
+signals[]
 ```
 
 The schema is versioned independently from the application release. Readers

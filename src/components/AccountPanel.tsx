@@ -46,14 +46,14 @@ export function AccountPanel({
       >
         <div className="account-panel-header">
           <div>
-            <span className="eyebrow">Data access</span>
-            <h2 id="account-title">Choose a GitHub view</h2>
+            <span className="eyebrow">数据来源</span>
+            <h2 id="account-title">选择 GitHub 视图</h2>
           </div>
           <button
             className="icon-button"
             type="button"
             onClick={onClose}
-            aria-label="Close data access"
+            aria-label="关闭数据来源设置"
           >
             <X size={18} />
           </button>
@@ -70,19 +70,19 @@ export function AccountPanel({
             ) : (
               <Globe2 size={13} />
             )}
-            {data.accessMode}
+            {data.accessMode === "private" ? "私有" : "公开"}
           </span>
         </div>
         <form className="public-lookup" onSubmit={submit}>
           <div className="account-option-title">
             <Globe2 size={18} />
             <div>
-              <strong>Public profile</strong>
-              <span>Look up recent public contribution activity.</span>
+              <strong>公开账户</strong>
+              <span>查询该账户近期的公开贡献和候选 Issue。</span>
             </div>
           </div>
           <label>
-            <span>GitHub username</span>
+            <span>GitHub 用户名</span>
             <div>
               <input
                 value={username}
@@ -92,7 +92,7 @@ export function AccountPanel({
                 required
               />
               <button type="submit" disabled={busy}>
-                Load public work
+                加载公开数据
               </button>
             </div>
           </label>
@@ -101,8 +101,8 @@ export function AccountPanel({
           <div className="account-option-title">
             <LockKeyhole size={18} />
             <div>
-              <strong>Private repositories</strong>
-              <span>Use a server-protected GitHub session.</span>
+              <strong>私有仓库</strong>
+              <span>通过服务端保护的 GitHub 会话读取。</span>
             </div>
           </div>
           {data.accessMode === "private" ? (
@@ -112,7 +112,7 @@ export function AccountPanel({
               onClick={onLogout}
               disabled={busy}
             >
-              Disconnect private session
+              断开私有会话
             </button>
           ) : (
             <button
@@ -120,23 +120,19 @@ export function AccountPanel({
               type="button"
               onClick={onConnectGitHub}
               disabled={!authConfigured || busy}
-              title={
-                authConfigured ? "Connect GitHub" : "OAuth relay not configured"
-              }
+              title={authConfigured ? "连接 GitHub" : "尚未配置 OAuth 中继"}
             >
               <ShieldCheck size={16} />
-              {authConfigured
-                ? "Connect GitHub"
-                : "Private access not configured"}
+              {authConfigured ? "连接 GitHub" : "尚未配置私有访问"}
             </button>
           )}
         </div>
         {error && <p className="account-error">{error}</p>}
         <div className="account-panel-footer">
           <button type="button" onClick={onUseSnapshot} disabled={busy}>
-            Use deployed snapshot
+            使用已部署快照
           </button>
-          <span>Private data is never written to the Pages artifact.</span>
+          <span>私有数据不会写入 GitHub Pages 静态文件。</span>
         </div>
       </div>
     </div>

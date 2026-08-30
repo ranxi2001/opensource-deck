@@ -52,6 +52,7 @@ console.log(
     user: dashboard.sourceUser.login,
     projects: dashboard.projects.length,
     items: dashboard.items.length,
+    recentIssues: dashboard.recentIssues.length,
     states,
     syncStatus: dashboard.syncStatus,
     warnings: dashboard.warnings.length,

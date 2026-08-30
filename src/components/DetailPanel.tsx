@@ -8,7 +8,12 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { REASON_LABELS, ROLE_LABELS, STATE_LABELS } from "../domain/labels";
+import {
+  REASON_LABELS,
+  ROLE_LABELS,
+  STATE_LABELS,
+  sourceFactLabel,
+} from "../domain/labels";
 import type { WorkItem } from "../domain/schema";
 import { relativeTime } from "../domain/time";
 
@@ -17,10 +22,25 @@ interface DetailPanelProps {
   onClose: () => void;
 }
 
+const REVIEW_LABELS: Record<WorkItem["reviewDecision"], string> = {
+  approved: "已批准",
+  changes_requested: "要求修改",
+  review_required: "需要审阅",
+  none: "无",
+  unknown: "未知",
+};
+
+const MERGE_LABELS: Record<WorkItem["mergeable"], string> = {
+  mergeable: "可合并",
+  conflicting: "存在冲突",
+  unknown: "未知",
+  not_applicable: "不适用",
+};
+
 export function DetailPanel({ item, onClose }: DetailPanelProps) {
   if (!item) return null;
   return (
-    <aside className="detail-panel" aria-label="Work item details">
+    <aside className="detail-panel" aria-label="贡献详情">
       <div className="detail-header">
         <div className="detail-kicker">
           {item.type === "pull_request" ? (
@@ -36,7 +56,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
           className="icon-button"
           type="button"
           onClick={onClose}
-          aria-label="Close details"
+          aria-label="关闭详情"
         >
           <X size={18} />
         </button>
@@ -51,11 +71,11 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
             />
             {STATE_LABELS[item.state]}
           </span>
-          <span>updated {relativeTime(item.updatedAt)}</span>
+          <span>更新于 {relativeTime(item.updatedAt)}</span>
         </div>
 
         <section className="detail-section">
-          <h3>Why it is here</h3>
+          <h3>进入该队列的原因</h3>
           <ul className="reason-list">
             {item.reasonCodes.map((reason) => (
               <li key={reason}>
@@ -69,7 +89,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
 
         <section className="detail-section detail-grid">
           <div>
-            <h3>Your role</h3>
+            <h3>你的角色</h3>
             <div className="tag-list">
               {item.roles.map((role) => (
                 <span key={role}>{ROLE_LABELS[role]}</span>
@@ -77,29 +97,29 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
             </div>
           </div>
           <div>
-            <h3>Review</h3>
-            <p>{item.reviewDecision.replaceAll("_", " ")}</p>
+            <h3>审阅状态</h3>
+            <p>{REVIEW_LABELS[item.reviewDecision]}</p>
           </div>
           <div>
-            <h3>Mergeability</h3>
-            <p>{item.mergeable.replaceAll("_", " ")}</p>
+            <h3>可合并状态</h3>
+            <p>{MERGE_LABELS[item.mergeable]}</p>
           </div>
           <div>
-            <h3>Last activity</h3>
+            <h3>最近活动</h3>
             <p>
               {item.latestActivity
                 ? `${item.latestActivity.actor}, ${relativeTime(item.latestActivity.at)}`
-                : "Not available"}
+                : "暂无数据"}
             </p>
           </div>
         </section>
 
         {item.checks.status !== "unavailable" && (
           <section className="detail-section">
-            <h3>Current checks</h3>
+            <h3>当前检查</h3>
             <div className="check-list">
               {item.checks.jobs.length === 0 ? (
-                <p>{item.checks.success} checks passed.</p>
+                <p>{item.checks.success} 项检查通过。</p>
               ) : (
                 item.checks.jobs.map((job) => {
                   const content = (
@@ -131,17 +151,17 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
         )}
 
         <section className="detail-section">
-          <h3>Source facts</h3>
+          <h3>来源事实</h3>
           <ul className="fact-list">
             {item.sourceFacts.map((fact) => (
-              <li key={fact}>{fact}</li>
+              <li key={fact}>{sourceFactLabel(fact)}</li>
             ))}
           </ul>
         </section>
 
         {item.labels.length > 0 && (
           <section className="detail-section">
-            <h3>Labels</h3>
+            <h3>标签</h3>
             <div className="tag-list">
               {item.labels.map((label) => (
                 <span key={label}>{label}</span>
@@ -154,7 +174,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
           <section className="detail-warning">
             <AlertTriangle size={17} />
             <div>
-              <strong>Partial data</strong>
+              <strong>数据不完整</strong>
               {item.warnings.map((warning) => (
                 <p key={warning}>{warning}</p>
               ))}
@@ -165,7 +185,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
       <div className="detail-actions">
         <a href={item.links.item} target="_blank" rel="noreferrer noopener">
           <CodeXml size={16} />
-          Open item
+          打开项目
           <ExternalLink size={14} />
         </a>
         {item.links.checks && (
@@ -173,7 +193,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
             href={item.links.checks}
             target="_blank"
             rel="noreferrer noopener"
-            title="Open checks"
+            title="打开检查"
           >
             <Workflow size={17} />
           </a>

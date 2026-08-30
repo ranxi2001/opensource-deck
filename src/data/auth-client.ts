@@ -11,8 +11,7 @@ export function authIsConfigured(): boolean {
 
 export function beginGitHubLogin(): void {
   const base = authBase();
-  if (!base)
-    throw new Error("Private access is not configured for this deployment.");
+  if (!base) throw new Error("当前部署尚未配置私有访问。");
   const login = new URL(`${base}/auth/login`);
   login.searchParams.set(
     "return_to",
@@ -25,15 +24,14 @@ export async function loadPrivateDashboard(
   signal?: AbortSignal,
 ): Promise<DashboardData> {
   const base = authBase();
-  if (!base)
-    throw new Error("Private access is not configured for this deployment.");
+  if (!base) throw new Error("当前部署尚未配置私有访问。");
   const response = await fetch(`${base}/api/dashboard`, {
     credentials: "include",
     headers: { Accept: "application/json" },
     signal,
   });
   if (response.status === 401)
-    throw new Error("Your GitHub session has expired. Connect again.");
+    throw new Error("GitHub 会话已过期，请重新连接。");
   if (!response.ok)
     throw new Error(
       `Private dashboard request failed with HTTP ${response.status}`,

@@ -59,7 +59,7 @@ export function CommandPalette({
         className="command-palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Find projects and work"
+        aria-label="查找项目和贡献"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="palette-search">
@@ -68,14 +68,14 @@ export function CommandPalette({
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Find a project, issue, or pull request"
-            aria-label="Find a project, issue, or pull request"
+            placeholder="查找项目、Issue 或 Pull Request"
+            aria-label="查找项目、Issue 或 Pull Request"
           />
           <button
             type="button"
             className="icon-button"
             onClick={onClose}
-            aria-label="Close search"
+            aria-label="关闭搜索"
           >
             <X size={17} />
           </button>
@@ -83,7 +83,7 @@ export function CommandPalette({
         <div className="palette-results">
           {projectMatches.length > 0 && (
             <section>
-              <h2>Projects</h2>
+              <h2>项目</h2>
               {projectMatches.map((project) => (
                 <button
                   type="button"
@@ -105,7 +105,7 @@ export function CommandPalette({
           )}
           {itemMatches.length > 0 && (
             <section>
-              <h2>Work</h2>
+              <h2>贡献</h2>
               {itemMatches.map((item) => (
                 <button
                   type="button"
@@ -132,7 +132,7 @@ export function CommandPalette({
             </section>
           )}
           {projectMatches.length === 0 && itemMatches.length === 0 && (
-            <div className="palette-empty">No matching public work.</div>
+            <div className="palette-empty">没有匹配的公开数据。</div>
           )}
         </div>
       </div>

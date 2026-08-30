@@ -1,10 +1,26 @@
-import type { ItemType, Role, WorkItem, WorkState } from "./schema";
+import type {
+  IssueSignal,
+  ItemType,
+  RecentIssue,
+  Role,
+  WorkItem,
+  WorkState,
+} from "./schema";
 
 export interface WorkFilters {
   state: WorkState | "all";
   project: string | "all";
   type: ItemType | "all";
   role: Role | "all";
+  query: string;
+}
+
+export type RecentIssueSignalFilter =
+  "all" | "unassigned" | "contribution_label" | "assigned";
+
+export interface RecentIssueFilters {
+  project: string | "all";
+  signal: RecentIssueSignalFilter;
   query: string;
 }
 
@@ -27,6 +43,42 @@ export function filterWorkItems(
       `#${item.number}`,
       ...item.labels,
       ...item.assignees,
+    ]
+      .join(" ")
+      .toLocaleLowerCase()
+      .includes(query);
+  });
+}
+
+const contributionSignals: IssueSignal[] = ["good_first_issue", "help_wanted"];
+
+export function filterRecentIssues(
+  issues: RecentIssue[],
+  filters: RecentIssueFilters,
+): RecentIssue[] {
+  const query = filters.query.trim().toLocaleLowerCase();
+  return issues.filter((issue) => {
+    if (filters.project !== "all" && issue.repository !== filters.project)
+      return false;
+    if (
+      filters.signal === "contribution_label" &&
+      !contributionSignals.some((signal) => issue.signals.includes(signal))
+    )
+      return false;
+    if (
+      filters.signal !== "all" &&
+      filters.signal !== "contribution_label" &&
+      !issue.signals.includes(filters.signal)
+    )
+      return false;
+    if (!query) return true;
+    return [
+      issue.repository,
+      issue.title,
+      `#${issue.number}`,
+      issue.author,
+      ...issue.labels,
+      ...issue.assignees,
     ]
       .join(" ")
       .toLocaleLowerCase()

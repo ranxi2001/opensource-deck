@@ -7,8 +7,6 @@ export async function loadDashboardData(
   const path = `${import.meta.env.BASE_URL}${configured.replace(/^\//, "")}`;
   const response = await fetch(path, { signal, cache: "no-store" });
   if (!response.ok)
-    throw new Error(
-      `Dashboard data request failed with HTTP ${response.status}`,
-    );
+    throw new Error(`仪表盘数据请求失败，HTTP 状态码：${response.status}`);
   return dashboardDataSchema.parse(await response.json());
 }

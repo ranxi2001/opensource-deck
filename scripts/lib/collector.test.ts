@@ -27,33 +27,53 @@ function fetcher(privateRepository: boolean): typeof fetch {
     const url = new URL(String(input));
     if (url.pathname === "/search/issues") {
       const query = url.searchParams.get("q") ?? "";
+      const recent = query.startsWith("repo:acme/demo is:issue");
       const include =
         query.startsWith("author:octocat is:pr") ||
         query.startsWith("involves:octocat");
       return response({
-        total_count: include ? 1 : 0,
+        total_count: include || recent ? 1 : 0,
         incomplete_results: false,
-        items: include
+        items: recent
           ? [
               {
-                id: 7,
-                node_id: "PR_node_7",
-                html_url: "https://github.com/acme/demo/pull/7",
+                id: 12,
+                node_id: "I_node_12",
+                html_url: "https://github.com/acme/demo/issues/12",
                 repository_url: "https://api.github.com/repos/acme/demo",
-                number: 7,
-                title: "Keep public state explainable",
-                user: { login: "octocat" },
+                number: 12,
+                title: "Add a contributor-friendly example",
+                user: { login: "reader" },
                 state: "open",
-                created_at: "2026-08-28T00:00:00.000Z",
-                updated_at: "2026-08-29T00:00:00.000Z",
+                created_at: "2026-08-29T00:00:00.000Z",
+                updated_at: "2026-08-30T00:00:00.000Z",
                 closed_at: null,
-                labels: [{ name: "dashboard" }],
+                labels: [{ name: "good first issue" }],
                 assignees: [],
-                pull_request: { merged_at: null },
-                draft: false,
+                comments: 2,
               },
             ]
-          : [],
+          : include
+            ? [
+                {
+                  id: 7,
+                  node_id: "PR_node_7",
+                  html_url: "https://github.com/acme/demo/pull/7",
+                  repository_url: "https://api.github.com/repos/acme/demo",
+                  number: 7,
+                  title: "Keep public state explainable",
+                  user: { login: "octocat" },
+                  state: "open",
+                  created_at: "2026-08-28T00:00:00.000Z",
+                  updated_at: "2026-08-29T00:00:00.000Z",
+                  closed_at: null,
+                  labels: [{ name: "dashboard" }],
+                  assignees: [],
+                  pull_request: { merged_at: null },
+                  draft: false,
+                },
+              ]
+            : [],
       });
     }
     if (url.pathname === "/repos/acme/demo") {
@@ -94,9 +114,11 @@ describe("collectDashboard", () => {
       expect.arrayContaining(["author", "involved"]),
     );
     expect(dashboard.projects[0]?.visibility).toBe("public");
-    expect(dashboard.warnings.join(" ")).toContain(
-      "20 recently active repositories",
+    expect(dashboard.recentIssues).toHaveLength(1);
+    expect(dashboard.recentIssues[0]?.signals).toEqual(
+      expect.arrayContaining(["unassigned", "good_first_issue"]),
     );
+    expect(dashboard.warnings.join(" ")).toContain("20 个近期活跃仓库");
   });
 
   it("drops private repositories unless authenticated mode explicitly allows them", async () => {

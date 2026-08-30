@@ -24,7 +24,7 @@
       "avatarUrl": "https://github.com/kvcache-ai.png?size=96",
       "forkUrl": "https://github.com/ranxi2001/AgentENV",
       "pinned": true,
-      "nextAction": "Waiting for a maintainer to rerun the failed setup job.",
+      "nextAction": "等待维护者重新运行失败的环境准备任务。",
       "updatedAt": "2026-08-30T04:30:38.000Z",
       "counts": {
         "needs_action": 1,
@@ -550,12 +550,70 @@
       "warnings": []
     }
   ],
+  "recentIssues": [
+    {
+      "id": "sample-recent-deerflow-5101",
+      "url": "https://github.com/bytedance/deer-flow/issues/5101",
+      "repository": "bytedance/deer-flow",
+      "number": 5101,
+      "title": "Improve error details when a workflow configuration is invalid",
+      "author": "community-user",
+      "createdAt": "2026-08-29T08:20:00.000Z",
+      "updatedAt": "2026-08-30T03:10:00.000Z",
+      "labels": ["help wanted", "backend"],
+      "assignees": [],
+      "comments": 3,
+      "signals": ["unassigned", "help_wanted"]
+    },
+    {
+      "id": "sample-recent-agentenv-241",
+      "url": "https://github.com/kvcache-ai/AgentENV/issues/241",
+      "repository": "kvcache-ai/AgentENV",
+      "number": 241,
+      "title": "Document the local snapshot cleanup workflow",
+      "author": "new-contributor",
+      "createdAt": "2026-08-28T11:30:00.000Z",
+      "updatedAt": "2026-08-29T22:40:00.000Z",
+      "labels": ["good first issue", "documentation"],
+      "assignees": [],
+      "comments": 1,
+      "signals": ["unassigned", "good_first_issue"]
+    },
+    {
+      "id": "sample-recent-openviking-377",
+      "url": "https://github.com/volcengine/OpenViking/issues/377",
+      "repository": "volcengine/OpenViking",
+      "number": 377,
+      "title": "Add a timeout option to the context import command",
+      "author": "openviking-user",
+      "createdAt": "2026-08-27T14:00:00.000Z",
+      "updatedAt": "2026-08-29T13:25:00.000Z",
+      "labels": ["enhancement", "needs-triage"],
+      "assignees": [],
+      "comments": 5,
+      "signals": ["unassigned", "needs_triage"]
+    },
+    {
+      "id": "sample-recent-book-631",
+      "url": "https://github.com/bojieli/ai-agent-book/issues/631",
+      "repository": "bojieli/ai-agent-book",
+      "number": 631,
+      "title": "Correct broken links in the memory systems chapter",
+      "author": "reader-01",
+      "createdAt": "2026-08-26T09:15:00.000Z",
+      "updatedAt": "2026-08-28T18:35:00.000Z",
+      "labels": ["help wanted", "documentation"],
+      "assignees": ["maintainer"],
+      "comments": 2,
+      "signals": ["assigned", "help_wanted"]
+    }
+  ],
   "syncStatus": "sample",
   "rateLimit": {
     "remaining": null,
     "resetAt": null
   },
   "warnings": [
-    "Sample data is displayed. Run the collector or wait for the next Pages sync for current public activity."
+    "当前显示样例数据。运行采集器或等待下一次 Pages 同步即可获取最新公开动态。"
   ]
 }
