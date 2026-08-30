@@ -4,9 +4,10 @@ OpenSourceDeck is a personal command center for open-source contributions. It
 turns GitHub issues, pull requests, reviews, and CI results into one navigable,
 action-oriented workspace.
 
-> Status: v0.1 implementation complete. Public GitHub Pages deployment is the
-> next release step. Private access requires a separately configured OAuth
-> relay.
+> Status: v0.1 public mode is live at
+> [onefly.top/opensource-deck](https://onefly.top/opensource-deck/). Private
+> access requires a separately configured OAuth relay and is not enabled on the
+> public deployment.
 
 ![OpenSourceDeck desktop dashboard](docs/assets/dashboard-desktop.png)
 

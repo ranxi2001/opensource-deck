@@ -2,14 +2,14 @@
 
 ## Document Control
 
-| Field             | Value                                      |
-| ----------------- | ------------------------------------------ |
-| Status            | Implemented; deployment validation pending |
-| Product           | OpenSourceDeck                             |
-| Owner             | `ranxi2001`                                |
-| Last updated      | 2026-08-30                                 |
-| Target release    | `v0.1.0`                                   |
-| Deployment target | GitHub Pages with optional OAuth relay     |
+| Field             | Value                                                         |
+| ----------------- | ------------------------------------------------------------- |
+| Status            | Public deployment validated; private relay deployment pending |
+| Product           | OpenSourceDeck                                                |
+| Owner             | `ranxi2001`                                                   |
+| Last updated      | 2026-08-30                                                    |
+| Target release    | `v0.1.0`                                                      |
+| Deployment target | GitHub Pages with optional OAuth relay                        |
 
 ## 1. Executive Summary
 
@@ -529,8 +529,8 @@ and issues may be observed through GitHub without adding client telemetry.
 - [x] Any valid username can load a bounded anonymous public workspace.
 - [x] The reference OAuth relay encrypts state and tokens, checks exact origins,
       and never returns a GitHub token to JavaScript.
-- [ ] No secret is present in the bundle, JSON, Pages artifact, or workflow log.
-- [ ] The site deploys correctly at `/opensource-deck/`.
+- [x] No secret is present in the bundle, JSON, Pages artifact, or workflow log.
+- [x] The site deploys correctly at `/opensource-deck/`.
 - [x] Desktop and mobile screenshots show no overlap, clipping, or blank primary
       content.
 - [x] Keyboard-only navigation covers queue, project, item, and quick-link flows.
@@ -561,7 +561,7 @@ and issues may be observed through GitHub without adding client telemetry.
 ### Milestone 3: Pages Automation
 
 - [x] Scheduled and manual sync workflow.
-- [ ] Static build and Pages artifact deployment.
+- [x] Static build and Pages artifact deployment.
 - [x] Freshness, partial failure, rate-limit, and empty-state behavior.
 - [x] Secret and public-data validation gates.
 - [x] Optional OAuth relay reference implementation.

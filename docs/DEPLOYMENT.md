@@ -2,6 +2,9 @@
 
 ## Public GitHub Pages Mode
 
+The canonical public deployment is
+[https://onefly.top/opensource-deck/](https://onefly.top/opensource-deck/).
+
 1. Fork or clone the repository.
 2. Set `github_user` in `deck.config.yml`.
 3. In repository settings, select GitHub Actions as the Pages source.
