@@ -1,0 +1,7 @@
+dist/
+coverage/
+playwright-report/
+test-results/
+public/data/live.json
+docs/assets/*.png
+package-lock.json

@@ -2,28 +2,28 @@
 
 ## Document Control
 
-| Field | Value |
-| --- | --- |
-| Status | Draft for implementation |
-| Product | OpenSourceDeck |
-| Owner | `ranxi2001` |
-| Last updated | 2026-08-30 |
-| Target release | `v0.1.0` |
-| Deployment target | GitHub Pages |
+| Field             | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Status            | Implemented; deployment validation pending |
+| Product           | OpenSourceDeck                             |
+| Owner             | `ranxi2001`                                |
+| Last updated      | 2026-08-30                                 |
+| Target release    | `v0.1.0`                                   |
+| Deployment target | GitHub Pages with optional OAuth relay     |
 
 ## 1. Executive Summary
 
 OpenSourceDeck is a read-only personal operations console for open-source
-contributors. It discovers a user's recent public GitHub participation,
-groups the work by repository, derives an explainable action state for each
-issue and pull request, and presents direct navigation from a single static
-site.
+contributors. It discovers recent GitHub participation, groups the work by
+repository, derives an explainable action state for each issue and pull
+request, and presents direct navigation from one responsive workspace.
 
-The first release is deliberately narrow. A scheduled GitHub Actions workflow
-collects public metadata, produces a versioned JSON artifact, builds a static
-web application, and deploys it to GitHub Pages. No credential is shipped to
-the browser. No upstream issue, pull request, review, notification, or
-repository is modified.
+The first release provides a public Pages snapshot, bounded browser lookup for
+any public username, and an optional OAuth relay for runtime private-repository
+access. Static artifacts contain public metadata only. GitHub tokens remain in
+an encrypted HttpOnly relay session and are never shipped to browser
+JavaScript. No upstream issue, pull request, review, notification, or repository
+is modified.
 
 ## 2. Problem Statement
 
@@ -77,20 +77,22 @@ needs one place to find pending reviews and work that has become blocked.
    item.
 3. Separate contributor-owned action from upstream-owned waiting.
 4. Make every derived state inspectable through source facts and reason codes.
-5. Operate as a static GitHub Pages site with no runtime backend.
-6. Keep setup fork-friendly and safe for public repositories.
+5. Operate public mode as a static GitHub Pages site.
+6. Support private repositories through an optional token-protecting OAuth
+   relay without persisting private data.
+7. Keep public setup fork-friendly and safe for public repositories.
 
 ## 5. Non-Goals For v0.1
 
-- Reading or displaying private repositories, issues, pull requests, or
-  notifications.
+- Reading or changing the GitHub notification inbox.
 - Mutating GitHub state, including comments, reviews, labels, assignments,
   reruns, merges, or notification read status.
 - Replacing GitHub Projects, issue trackers, or repository-native workflows.
 - Team workspaces, shared notes, role-based access, or multi-user hosting.
 - GitLab, Forgejo, Gitea, or Bitbucket integration.
 - AI-generated summaries, priorities, or next actions.
-- A database, server-side session, OAuth login, or hosted SaaS control plane.
+- Persistent private-data storage, a shared database, or a hosted SaaS control
+  plane.
 - General contribution analytics, streaks, rankings, or portfolio pages.
 
 ## 6. Product Principles
@@ -112,11 +114,12 @@ Projects appear because the user recently participated in them. Configuration
 may pin, alias, hide, or annotate a discovered project, but it is not the
 primary inventory.
 
-### 6.4 Public Means Public
+### 6.4 Static Means Public
 
 The generated Pages artifact is public data. A secret with private repository
-access must not be used by the v0.1 sync job, even if the workflow can store it
-safely.
+access must not be used by the static sync job. Private data is requested only
+at runtime through an authenticated relay and is never written into the static
+artifact.
 
 ### 6.5 Operational Interface
 
@@ -124,6 +127,17 @@ The dashboard is the first screen. Visual density should support scanning and
 repeated action rather than marketing presentation.
 
 ## 7. Scope Of v0.1
+
+### 7.0 Access Modes
+
+- Deployed snapshot: an hourly Action generates the configured owner's fully
+  enriched public workspace.
+- Public username: the browser accepts any GitHub username and performs a
+  bounded anonymous lookup over at most 20 recently active repositories,
+  without per-item CI, review, or comment enrichment.
+- Private repositories: an optional OAuth relay performs server-side code
+  exchange, keeps the GitHub token in an encrypted HttpOnly cookie, and returns
+  private data at runtime without writing it to Pages.
 
 ### 7.1 Automatic Discovery
 
@@ -173,13 +187,13 @@ Each discovered repository becomes a project entry containing:
 
 The primary interface provides these queues:
 
-| Queue | Meaning |
-| --- | --- |
-| Needs action | A source fact indicates that the configured user should act |
+| Queue            | Meaning                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Needs action     | A source fact indicates that the configured user should act                   |
 | Waiting upstream | The item is open and the next visible response belongs to another participant |
-| Active | The item is open, but ownership of the next action is not established |
-| Completed | The item was merged or closed within the retention window |
-| Snoozed | A public manual override temporarily removes an item from active queues |
+| Active           | The item is open, but ownership of the next action is not established         |
+| Completed        | The item was merged or closed within the retention window                     |
+| Snoozed          | A public manual override temporarily removes an item from active queues       |
 
 `Unknown` is a data quality state, not a user-facing success state. Unknown
 items remain accessible and display the missing facts.
@@ -211,25 +225,28 @@ that a maintainer has accepted responsibility or promised a response.
 
 ## 9. Functional Requirements
 
-| ID | Requirement | Priority |
-| --- | --- | --- |
-| FR-001 | Configure one public GitHub username | Must |
-| FR-002 | Discover recent public issues and pull requests across repositories | Must |
-| FR-003 | Preserve user roles such as author, assignee, reviewer, and mentioned participant | Must |
-| FR-004 | Group all work by full repository name | Must |
-| FR-005 | Classify work using the state contract in section 8 | Must |
-| FR-006 | Display Needs action, Waiting upstream, Active, and Completed views | Must |
-| FR-007 | Display exact reason codes and data freshness | Must |
-| FR-008 | Link directly to repository, issue, pull request, checks, and Actions pages | Must |
-| FR-009 | Search by repository, item number, title, and label | Must |
-| FR-010 | Filter by state, item type, role, organization, and freshness | Must |
-| FR-011 | Pin, alias, hide, or annotate projects through versioned configuration | Should |
-| FR-012 | Snooze an item through versioned public configuration | Should |
-| FR-013 | Support keyboard navigation and a command palette | Should |
-| FR-014 | Show partial-sync warnings without discarding successful data | Must |
-| FR-015 | Refresh on a schedule and through manual workflow dispatch | Must |
-| FR-016 | Retain completed items for a configurable period, default 30 days | Should |
-| FR-017 | Render well at 360 px mobile width and common desktop widths | Must |
+| ID     | Requirement                                                                       | Priority |
+| ------ | --------------------------------------------------------------------------------- | -------- |
+| FR-001 | Configure one public GitHub username                                              | Must     |
+| FR-002 | Discover recent public issues and pull requests across repositories               | Must     |
+| FR-003 | Preserve user roles such as author, assignee, reviewer, and mentioned participant | Must     |
+| FR-004 | Group all work by full repository name                                            | Must     |
+| FR-005 | Classify work using the state contract in section 8                               | Must     |
+| FR-006 | Display Needs action, Waiting upstream, Active, and Completed views               | Must     |
+| FR-007 | Display exact reason codes and data freshness                                     | Must     |
+| FR-008 | Link directly to repository, issue, pull request, checks, and Actions pages       | Must     |
+| FR-009 | Search by repository, item number, title, and label                               | Must     |
+| FR-010 | Filter by state, item type, role, organization, and freshness                     | Must     |
+| FR-011 | Pin, alias, hide, or annotate projects through versioned configuration            | Should   |
+| FR-012 | Snooze an item through versioned public configuration                             | Should   |
+| FR-013 | Support keyboard navigation and a command palette                                 | Should   |
+| FR-014 | Show partial-sync warnings without discarding successful data                     | Must     |
+| FR-015 | Refresh on a schedule and through manual workflow dispatch                        | Must     |
+| FR-016 | Retain completed items for a configurable period, default 30 days                 | Should   |
+| FR-017 | Render well at 360 px mobile width and common desktop widths                      | Must     |
+| FR-018 | Accept any valid GitHub username for bounded public browser lookup                | Must     |
+| FR-019 | Support GitHub OAuth private-repository data through a server-side relay          | Must     |
+| FR-020 | Keep private tokens and data out of browser JavaScript and Pages artifacts        | Must     |
 
 ## 10. Information Architecture
 
@@ -301,6 +318,7 @@ contains:
 
 ```text
 schemaVersion
+accessMode
 generatedAt
 sourceUser
 lookback
@@ -310,6 +328,9 @@ syncStatus
 rateLimit
 warnings[]
 ```
+
+Each project records `visibility` as `public` or `private`. A static snapshot
+must contain public projects only.
 
 Each work item contains at least:
 
@@ -344,27 +365,38 @@ email address collected from commit data, comment body, or raw API payload.
 
 ```mermaid
 flowchart LR
-    S[Scheduled or manual Action] --> C[Collector]
-    C --> G[GitHub Search, REST, and GraphQL APIs]
+    S[Scheduled or manual Action] --> C[Full public collector]
     C --> N[Normalizer and classifier]
-    N --> J[Versioned dashboard.json]
+    N --> J[Public dashboard.json]
     J --> B[Static application build]
     B --> P[GitHub Pages artifact]
+
+    I[Username input] --> L[Bounded browser collector]
+    L --> G[Public GitHub REST API]
+
+    O[GitHub OAuth] --> R[Optional auth relay]
+    R --> H[Authenticated GitHub REST API]
+    R --> D[Runtime private response]
+
     P --> U[Contributor browser]
+    L --> U
+    D --> U
 ```
 
-### 13.1 Proposed Stack
+### 13.1 Implemented Stack
 
 - TypeScript for collector, schema, classifier, and frontend.
 - React with Vite for a static application and predictable Pages base paths.
-- A runtime schema library for configuration and generated-data validation.
+- Zod and YAML for configuration and generated-data validation.
 - Vitest for deterministic classifier and data transformation tests.
 - Testing Library for component behavior.
 - Playwright for desktop/mobile navigation and rendered-state smoke tests.
 - GitHub Actions for scheduled collection, build, test, and Pages deployment.
 
-The implementation may change these libraries through an architecture decision,
-but it must preserve the static, read-only, public-data boundary.
+The optional OAuth relay is implemented as a Cloudflare Worker reference
+adapter with no database. It can be replaced through an architecture decision,
+but any adapter must preserve the read-only, token-protection, origin, and
+artifact boundaries.
 
 ### 13.2 Workflow Permissions
 
@@ -375,8 +407,8 @@ The deployment workflow uses least privilege:
 - `id-token: write` for Pages deployment provenance.
 
 The workflow must not commit generated data back to the repository. Build and
-deploy jobs pass an artifact. Any future capability requiring broader token
-scope needs a separate security review and is out of v0.1.
+deploy jobs pass an artifact. Private mode uses a separately deployed relay;
+OAuth and session secrets are not available to the Pages workflow.
 
 ### 13.3 Refresh Model
 
@@ -390,22 +422,26 @@ scope needs a separate security review and is out of v0.1.
 
 ## 14. Security And Privacy Requirements
 
-| ID | Requirement |
-| --- | --- |
-| SEC-001 | Never include a GitHub token in client code, static data, logs, or artifacts |
-| SEC-002 | Collect and publish public repository data only |
-| SEC-003 | Use read-only API operations in v0.1 |
-| SEC-004 | Escape or render GitHub-provided text as untrusted content |
-| SEC-005 | Do not render raw issue, comment, or PR HTML |
-| SEC-006 | Open external links with safe opener isolation |
-| SEC-007 | Validate config and generated data against versioned schemas |
-| SEC-008 | Keep workflow permissions minimal and explicit |
-| SEC-009 | Do not enable analytics or telemetry by default |
-| SEC-010 | Do not retain raw API responses in build artifacts |
+| ID      | Requirement                                                                           |
+| ------- | ------------------------------------------------------------------------------------- |
+| SEC-001 | Never include a GitHub token in client code, static data, logs, or artifacts          |
+| SEC-002 | Collect and publish public repository data only in static artifacts                   |
+| SEC-003 | Use read-only API operations in v0.1                                                  |
+| SEC-004 | Escape or render GitHub-provided text as untrusted content                            |
+| SEC-005 | Do not render raw issue, comment, or PR HTML                                          |
+| SEC-006 | Open external links with safe opener isolation                                        |
+| SEC-007 | Validate config and generated data against versioned schemas                          |
+| SEC-008 | Keep workflow permissions minimal and explicit                                        |
+| SEC-009 | Do not enable analytics or telemetry by default                                       |
+| SEC-010 | Do not retain raw API responses in build artifacts                                    |
+| SEC-011 | Exchange OAuth codes server-side and keep GitHub tokens in encrypted HttpOnly cookies |
+| SEC-012 | Allow credentials only from exact configured frontend origins                         |
+| SEC-013 | Return private dashboard responses with `no-store` and never persist them             |
 
 The public GitHub Events API is not the source of truth for history because its
-window and latency are limited. The notification API is excluded because it
-requires user authentication and can expose private repository metadata.
+window and latency are limited. The notification API is excluded even in
+private mode because it expands sensitive scope and state semantics beyond the
+read-only contribution workspace.
 
 ## 15. Reliability And Failure Behavior
 
@@ -461,14 +497,19 @@ v0.1 is successful when:
 
 1. A user can fork or clone the project, set one GitHub username, enable Pages,
    and receive a useful dashboard without listing repositories.
-2. The initial deployment completes within 10 minutes under normal API and
+2. A visitor can enter another valid GitHub username and receive a bounded
+   public workspace without creating an account.
+3. A configured deployment can authenticate with GitHub and inspect permitted
+   private repositories without exposing the GitHub token to JavaScript or the
+   Pages artifact.
+4. The initial deployment completes within 10 minutes under normal API and
    Actions availability.
-3. No credential or private item appears in the built site or Pages artifact.
-4. Every displayed queue state has at least one visible reason code.
-5. A failing check or requested review appears in Needs action on the next
+5. No credential or private item appears in the built site or Pages artifact.
+6. Every displayed queue state has at least one visible reason code.
+7. A failing check or requested review appears in Needs action on the next
    successful sync.
-6. A merged or closed item leaves active queues and remains in recent history.
-7. The principal desktop and mobile workflows pass automated accessibility and
+8. A merged or closed item leaves active queues and remains in recent history.
+9. The principal desktop and mobile workflows pass automated accessibility and
    browser smoke tests.
 
 No product analytics are required for v0.1. Repository adoption, forks, stars,
@@ -476,21 +517,24 @@ and issues may be observed through GitHub without adding client telemetry.
 
 ## 18. v0.1 Acceptance Criteria
 
-- [ ] Public account activity discovers at least authored issues, authored PRs,
+- [x] Public account activity discovers at least authored issues, authored PRs,
       requested reviews, and completed reviews across repositories.
-- [ ] Duplicate search results collapse to one item with all applicable roles.
-- [ ] Projects are grouped by `owner/name` and need no manual inventory.
-- [ ] State precedence and reason codes match section 8 fixtures.
-- [ ] Open PR checks distinguish failure, pending, success, and unavailable.
-- [ ] All item and project quick links reach the intended GitHub page.
-- [ ] Configuration schema errors are actionable.
-- [ ] Partial enrichment failures are visible and do not erase successful data.
+- [x] Duplicate search results collapse to one item with all applicable roles.
+- [x] Projects are grouped by `owner/name` and need no manual inventory.
+- [x] State precedence and reason codes match section 8 fixtures.
+- [x] Open PR checks distinguish failure, pending, success, and unavailable.
+- [x] All item and project quick links reach the intended GitHub page.
+- [x] Configuration schema errors are actionable.
+- [x] Partial enrichment failures are visible and do not erase successful data.
+- [x] Any valid username can load a bounded anonymous public workspace.
+- [x] The reference OAuth relay encrypts state and tokens, checks exact origins,
+      and never returns a GitHub token to JavaScript.
 - [ ] No secret is present in the bundle, JSON, Pages artifact, or workflow log.
 - [ ] The site deploys correctly at `/opensource-deck/`.
-- [ ] Desktop and mobile screenshots show no overlap, clipping, or blank primary
+- [x] Desktop and mobile screenshots show no overlap, clipping, or blank primary
       content.
-- [ ] Keyboard-only navigation covers queue, project, item, and quick-link flows.
-- [ ] The repository documents setup, architecture, security, and contribution
+- [x] Keyboard-only navigation covers queue, project, item, and quick-link flows.
+- [x] The repository documents setup, architecture, security, and contribution
       commands before `v0.1.0`.
 
 ## 19. Delivery Plan
@@ -502,24 +546,25 @@ and issues may be observed through GitHub without adding client telemetry.
 
 ### Milestone 1: Data Foundation
 
-- Configuration and generated-data schemas.
-- GitHub API adapters, pagination, and fixtures.
-- Discovery, normalization, deduplication, and classifier unit tests.
-- Local JSON generation command.
+- [x] Configuration and generated-data schemas.
+- [x] GitHub API adapters, pagination, and fixtures.
+- [x] Discovery, normalization, deduplication, and classifier unit tests.
+- [x] Local JSON generation command.
 
 ### Milestone 2: Operational Dashboard
 
-- Queue and project navigation.
-- Dense work-item view and detail surface.
-- Search, filters, reason codes, quick links, and responsive behavior.
-- Component, accessibility, and visual smoke tests.
+- [x] Queue and project navigation.
+- [x] Dense work-item view and detail surface.
+- [x] Search, filters, reason codes, quick links, and responsive behavior.
+- [x] Component, accessibility, and visual smoke tests.
 
 ### Milestone 3: Pages Automation
 
-- Scheduled and manual sync workflow.
-- Static build and Pages artifact deployment.
-- Freshness, partial failure, rate-limit, and empty-state behavior.
-- Secret and public-data validation gates.
+- [x] Scheduled and manual sync workflow.
+- [ ] Static build and Pages artifact deployment.
+- [x] Freshness, partial failure, rate-limit, and empty-state behavior.
+- [x] Secret and public-data validation gates.
+- [x] Optional OAuth relay reference implementation.
 
 ### Milestone 4: Public Beta
 
@@ -530,17 +575,19 @@ and issues may be observed through GitHub without adding client telemetry.
 
 ## 20. Risks And Mitigations
 
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Search indexing delay | Recently updated work appears late | Show freshness and avoid real-time claims |
-| Search result cap | Very active accounts lose older items | Partition by time/type and report truncation |
-| API schema or permission drift | Sync fails or loses fields | Typed adapters, fixtures, and explicit warnings |
-| Ambiguous next-action ownership | Incorrect queue placement | Conservative precedence, reason codes, and Active fallback |
-| API cost from enrichment | Rate limiting and slow workflows | Enrich open/actionable items first with bounded concurrency |
-| Public config notes leak context | Privacy incident | Prominent warnings, public-only examples, no private mode |
-| GitHub Pages schedule delay | Stale dashboard | Timestamp, stale indicator, and manual dispatch |
-| User content causes XSS | Credential or session compromise | Treat all remote text as untrusted and never render raw HTML |
-| Static-only boundary limits features | No live inbox or mutations | Preserve as a product principle through v0.1; evaluate a GitHub App separately |
+| Risk                                 | Impact                                 | Mitigation                                                                     |
+| ------------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------ |
+| Search indexing delay                | Recently updated work appears late     | Show freshness and avoid real-time claims                                      |
+| Search result cap                    | Very active accounts lose older items  | Partition by time/type and report truncation                                   |
+| API schema or permission drift       | Sync fails or loses fields             | Typed adapters, fixtures, and explicit warnings                                |
+| Ambiguous next-action ownership      | Incorrect queue placement              | Conservative precedence, reason codes, and Active fallback                     |
+| API cost from enrichment             | Rate limiting and slow workflows       | Enrich open/actionable items first with bounded concurrency                    |
+| Public config notes leak context     | Privacy incident                       | Prominent warnings and public-only examples                                    |
+| GitHub Pages schedule delay          | Stale dashboard                        | Timestamp, stale indicator, and manual dispatch                                |
+| User content causes XSS              | Credential or session compromise       | Treat all remote text as untrusted and never render raw HTML                   |
+| Static-only boundary limits features | No live inbox or mutations             | Preserve as a product principle through v0.1; evaluate a GitHub App separately |
+| Cross-site cookie blocking           | Private login fails on default domains | Recommend same-site custom frontend and relay domains                          |
+| OAuth `repo` scope is broad          | User grants more access than desired   | Explicit consent text and future fine-grained GitHub App adapter               |
 
 ## 21. Decisions And Open Questions
 
@@ -549,22 +596,25 @@ and issues may be observed through GitHub without adding client telemetry.
 - Product name: OpenSourceDeck.
 - Public, owner-maintained MIT project.
 - GitHub Pages deployment.
-- Public GitHub data only.
+- Public static artifacts plus runtime private data through the optional relay.
 - Read-only behavior.
 - Default 90-day discovery and 30-day completed retention.
 - Hourly scheduled refresh plus manual dispatch.
 - Deterministic classification without AI.
+- REST Search and REST enrichment behind a typed GET-only adapter.
+- Table/detail desktop layout and responsive mobile list.
+- Browser public lookup is bounded to 20 recent repositories.
+- GitHub OAuth uses PKCE plus server-side exchange and encrypted HttpOnly
+  sessions.
 
 ### Open Questions For Implementation
 
-1. Whether GraphQL search or REST search should be the primary discovery API
-   after fixture-based cost comparison.
-2. How much timeline data is necessary to classify Waiting upstream without
+1. How much timeline data is necessary to classify Waiting upstream without
    consuming excessive requests.
-3. Whether the first UI should use a table plus detail drawer or a responsive
-   master-detail list while preserving the same information architecture.
-4. Which configuration overrides remain safe and understandable in a public
+2. Which configuration overrides remain safe and understandable in a public
    repository.
+3. Whether a future GitHub App adapter should replace the OAuth App `repo`
+   scope with installation-selected repositories.
 
 These questions may change implementation details but must not weaken the
 security, public-data, read-only, or explainability requirements.

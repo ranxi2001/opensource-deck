@@ -1,0 +1,4 @@
+AUTH_BASE_URL=http://localhost:8787
+GITHUB_CLIENT_ID=replace-with-oauth-client-id
+GITHUB_CLIENT_SECRET=replace-with-oauth-client-secret
+SESSION_SECRET=replace-with-at-least-32-random-characters

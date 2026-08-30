@@ -26,11 +26,16 @@ other secrets in a report.
 
 ## Security Boundaries
 
-The v0.1 design requires:
+The v0.1 implementation requires:
 
-- public GitHub data only;
+- public GitHub data only in static snapshots and Pages artifacts;
 - read-only GitHub API behavior;
-- no token in client code, generated JSON, logs, or Pages artifacts;
+- no token in client code, browser storage, generated JSON, logs, screenshots,
+  or Pages artifacts;
+- server-side OAuth code exchange with PKCE;
+- AES-GCM encrypted, expiring, HttpOnly private sessions;
+- exact origin allowlists and credentialed CORS only for approved origins;
+- no persistent private-data store;
 - untrusted rendering for all GitHub-provided text;
 - minimal explicit workflow permissions;
 - no client analytics by default.

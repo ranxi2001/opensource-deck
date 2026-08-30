@@ -1,0 +1,60 @@
+name: Sync and deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Collect public GitHub activity
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run sync -- --output public/data/dashboard.json
+      - run: npm run check
+      - name: Build project site
+        env:
+          VITE_BASE_PATH: /opensource-deck/
+          VITE_AUTH_API_URL: ${{ vars.AUTH_API_URL }}
+        run: npm run build
+      - name: Reject credentials in the static artifact
+        run: |
+          if grep -RIE 'gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_|Authorization:[[:space:]]*Bearer' dist; then
+            echo "credential-like content found in dist" >&2
+            exit 1
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

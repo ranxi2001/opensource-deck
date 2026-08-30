@@ -1,0 +1,11 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "opensource-deck-auth",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-30",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:4173,https://ranxi2001.github.io",
+    "PUBLIC_APP_URL": "https://ranxi2001.github.io/opensource-deck/",
+  },
+}

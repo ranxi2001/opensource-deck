@@ -1,0 +1,561 @@
+{
+  "schemaVersion": "1.0",
+  "accessMode": "public",
+  "generatedAt": "2026-08-30T05:00:00.000Z",
+  "sourceUser": {
+    "login": "ranxi2001",
+    "name": "Onefly",
+    "avatarUrl": "https://github.com/ranxi2001.png?size=160",
+    "profileUrl": "https://github.com/ranxi2001"
+  },
+  "lookback": {
+    "days": 90,
+    "since": "2026-06-01",
+    "completedRetentionDays": 30
+  },
+  "projects": [
+    {
+      "repository": "kvcache-ai/AgentENV",
+      "visibility": "public",
+      "name": "AgentENV",
+      "owner": "kvcache-ai",
+      "description": "Infrastructure for isolated, snapshot-capable agent environments.",
+      "url": "https://github.com/kvcache-ai/AgentENV",
+      "avatarUrl": "https://github.com/kvcache-ai.png?size=96",
+      "forkUrl": "https://github.com/ranxi2001/AgentENV",
+      "pinned": true,
+      "nextAction": "Waiting for a maintainer to rerun the failed setup job.",
+      "updatedAt": "2026-08-30T04:30:38.000Z",
+      "counts": {
+        "needs_action": 1,
+        "waiting_upstream": 0,
+        "active": 0,
+        "completed": 0,
+        "snoozed": 0,
+        "unknown": 0
+      },
+      "links": {
+        "repository": "https://github.com/kvcache-ai/AgentENV",
+        "issues": "https://github.com/kvcache-ai/AgentENV/issues",
+        "pulls": "https://github.com/kvcache-ai/AgentENV/pulls",
+        "actions": "https://github.com/kvcache-ai/AgentENV/actions",
+        "fork": "https://github.com/ranxi2001/AgentENV"
+      }
+    },
+    {
+      "repository": "bytedance/deer-flow",
+      "visibility": "public",
+      "name": "deer-flow",
+      "owner": "bytedance",
+      "description": "A community-driven deep research and agent framework.",
+      "url": "https://github.com/bytedance/deer-flow",
+      "avatarUrl": "https://github.com/bytedance.png?size=96",
+      "pinned": true,
+      "updatedAt": "2026-08-30T04:44:59.000Z",
+      "counts": {
+        "needs_action": 0,
+        "waiting_upstream": 2,
+        "active": 0,
+        "completed": 0,
+        "snoozed": 0,
+        "unknown": 0
+      },
+      "links": {
+        "repository": "https://github.com/bytedance/deer-flow",
+        "issues": "https://github.com/bytedance/deer-flow/issues",
+        "pulls": "https://github.com/bytedance/deer-flow/pulls",
+        "actions": "https://github.com/bytedance/deer-flow/actions"
+      }
+    },
+    {
+      "repository": "volcengine/OpenViking",
+      "visibility": "public",
+      "name": "OpenViking",
+      "owner": "volcengine",
+      "description": "An open-source context database for AI agents.",
+      "url": "https://github.com/volcengine/OpenViking",
+      "avatarUrl": "https://github.com/volcengine.png?size=96",
+      "forkUrl": "https://github.com/ranxi2001/OpenViking",
+      "pinned": false,
+      "updatedAt": "2026-08-29T18:12:00.000Z",
+      "counts": {
+        "needs_action": 0,
+        "waiting_upstream": 1,
+        "active": 1,
+        "completed": 1,
+        "snoozed": 0,
+        "unknown": 0
+      },
+      "links": {
+        "repository": "https://github.com/volcengine/OpenViking",
+        "issues": "https://github.com/volcengine/OpenViking/issues",
+        "pulls": "https://github.com/volcengine/OpenViking/pulls",
+        "actions": "https://github.com/volcengine/OpenViking/actions",
+        "fork": "https://github.com/ranxi2001/OpenViking"
+      }
+    },
+    {
+      "repository": "NousResearch/hermes-agent",
+      "visibility": "public",
+      "name": "hermes-agent",
+      "owner": "NousResearch",
+      "description": "The agent runtime behind Hermes.",
+      "url": "https://github.com/NousResearch/hermes-agent",
+      "avatarUrl": "https://github.com/NousResearch.png?size=96",
+      "pinned": false,
+      "updatedAt": "2026-08-28T12:15:00.000Z",
+      "counts": {
+        "needs_action": 0,
+        "waiting_upstream": 0,
+        "active": 1,
+        "completed": 0,
+        "snoozed": 0,
+        "unknown": 0
+      },
+      "links": {
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "issues": "https://github.com/NousResearch/hermes-agent/issues",
+        "pulls": "https://github.com/NousResearch/hermes-agent/pulls",
+        "actions": "https://github.com/NousResearch/hermes-agent/actions"
+      }
+    },
+    {
+      "repository": "bojieli/ai-agent-book",
+      "visibility": "public",
+      "name": "ai-agent-book",
+      "owner": "bojieli",
+      "description": "Open-source companion repository for an AI agent systems book.",
+      "url": "https://github.com/bojieli/ai-agent-book",
+      "avatarUrl": "https://github.com/bojieli.png?size=96",
+      "pinned": false,
+      "updatedAt": "2026-08-27T09:40:00.000Z",
+      "counts": {
+        "needs_action": 0,
+        "waiting_upstream": 0,
+        "active": 1,
+        "completed": 1,
+        "snoozed": 0,
+        "unknown": 0
+      },
+      "links": {
+        "repository": "https://github.com/bojieli/ai-agent-book",
+        "issues": "https://github.com/bojieli/ai-agent-book/issues",
+        "pulls": "https://github.com/bojieli/ai-agent-book/pulls",
+        "actions": "https://github.com/bojieli/ai-agent-book/actions"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "sample-agentenv-230",
+      "url": "https://github.com/kvcache-ai/AgentENV/pull/230",
+      "repository": "kvcache-ai/AgentENV",
+      "number": 230,
+      "type": "pull_request",
+      "title": "fix: preserve anonymous OverlayBD credential mode",
+      "author": "ranxi2001",
+      "sourceState": "open",
+      "state": "needs_action",
+      "reasonCodes": ["ci_failure", "last_activity_by_user"],
+      "roles": ["author"],
+      "createdAt": "2026-08-29T15:46:18.000Z",
+      "updatedAt": "2026-08-30T04:30:38.000Z",
+      "closedAt": null,
+      "labels": ["bug", "storage"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "mergeable",
+      "reviewDecision": "review_required",
+      "checks": {
+        "status": "failure",
+        "total": 6,
+        "success": 5,
+        "failure": 1,
+        "pending": 0,
+        "jobs": [
+          {
+            "name": "e2e-tests (single-node)",
+            "status": "failure",
+            "url": "https://github.com/kvcache-ai/AgentENV/actions/runs/33261151812"
+          },
+          { "name": "unit-tests", "status": "success" },
+          { "name": "clippy", "status": "success" }
+        ]
+      },
+      "latestActivity": {
+        "actor": "ranxi2001",
+        "at": "2026-08-30T04:30:38.000Z",
+        "kind": "commented",
+        "byUser": true
+      },
+      "links": {
+        "item": "https://github.com/kvcache-ai/AgentENV/pull/230",
+        "repository": "https://github.com/kvcache-ai/AgentENV",
+        "checks": "https://github.com/kvcache-ai/AgentENV/pull/230/checks",
+        "actions": "https://github.com/kvcache-ai/AgentENV/actions"
+      },
+      "sourceFacts": [
+        "Authored pull request",
+        "Current head has a failing check"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "sample-deerflow-5093",
+      "url": "https://github.com/bytedance/deer-flow/issues/5093",
+      "repository": "bytedance/deer-flow",
+      "number": 5093,
+      "type": "issue",
+      "title": "fix(memory): add a durable clear generation fence",
+      "author": "luojiyin1987",
+      "sourceState": "open",
+      "state": "waiting_upstream",
+      "reasonCodes": ["last_activity_by_user"],
+      "roles": ["involved"],
+      "createdAt": "2026-08-29T15:14:41.000Z",
+      "updatedAt": "2026-08-30T04:44:59.000Z",
+      "closedAt": null,
+      "labels": ["needs-triage"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "not_applicable",
+      "reviewDecision": "none",
+      "checks": {
+        "status": "unavailable",
+        "total": 0,
+        "success": 0,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": {
+        "actor": "ranxi2001",
+        "at": "2026-08-30T04:44:59.000Z",
+        "kind": "commented",
+        "byUser": true
+      },
+      "links": {
+        "item": "https://github.com/bytedance/deer-flow/issues/5093",
+        "repository": "https://github.com/bytedance/deer-flow",
+        "actions": "https://github.com/bytedance/deer-flow/actions"
+      },
+      "sourceFacts": [
+        "Recent involvement",
+        "Last visible relevant activity is yours"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "sample-deerflow-5088",
+      "url": "https://github.com/bytedance/deer-flow/issues/5088",
+      "repository": "bytedance/deer-flow",
+      "number": 5088,
+      "type": "issue",
+      "title": "ci: split blocking I/O tests from the normal backend suite",
+      "author": "community-contributor",
+      "sourceState": "open",
+      "state": "waiting_upstream",
+      "reasonCodes": ["last_activity_by_user"],
+      "roles": ["involved"],
+      "createdAt": "2026-08-29T12:50:00.000Z",
+      "updatedAt": "2026-08-29T13:34:00.000Z",
+      "closedAt": null,
+      "labels": ["needs-triage", "ci"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "not_applicable",
+      "reviewDecision": "none",
+      "checks": {
+        "status": "unavailable",
+        "total": 0,
+        "success": 0,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": {
+        "actor": "ranxi2001",
+        "at": "2026-08-29T13:34:00.000Z",
+        "kind": "commented",
+        "byUser": true
+      },
+      "links": {
+        "item": "https://github.com/bytedance/deer-flow/issues/5088",
+        "repository": "https://github.com/bytedance/deer-flow",
+        "actions": "https://github.com/bytedance/deer-flow/actions"
+      },
+      "sourceFacts": ["Recent involvement"],
+      "warnings": []
+    },
+    {
+      "id": "sample-openviking-4459",
+      "url": "https://github.com/volcengine/OpenViking/pull/4459",
+      "repository": "volcengine/OpenViking",
+      "number": 4459,
+      "type": "pull_request",
+      "title": "feat(studio): render Mermaid diagrams in markdown",
+      "author": "ranxi2001",
+      "sourceState": "open",
+      "state": "waiting_upstream",
+      "reasonCodes": ["last_activity_by_user"],
+      "roles": ["author"],
+      "createdAt": "2026-08-27T16:10:00.000Z",
+      "updatedAt": "2026-08-29T18:12:00.000Z",
+      "closedAt": null,
+      "labels": ["web", "studio"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "mergeable",
+      "reviewDecision": "review_required",
+      "checks": {
+        "status": "success",
+        "total": 4,
+        "success": 4,
+        "failure": 0,
+        "pending": 0,
+        "jobs": [
+          { "name": "API/CLI", "status": "success" },
+          { "name": "plugin", "status": "success" }
+        ]
+      },
+      "latestActivity": {
+        "actor": "ranxi2001",
+        "at": "2026-08-29T18:12:00.000Z",
+        "kind": "committed",
+        "byUser": true
+      },
+      "links": {
+        "item": "https://github.com/volcengine/OpenViking/pull/4459",
+        "repository": "https://github.com/volcengine/OpenViking",
+        "checks": "https://github.com/volcengine/OpenViking/pull/4459/checks",
+        "actions": "https://github.com/volcengine/OpenViking/actions"
+      },
+      "sourceFacts": ["Authored pull request", "Current head checks passed"],
+      "warnings": []
+    },
+    {
+      "id": "sample-openviking-4301",
+      "url": "https://github.com/volcengine/OpenViking/pull/4301",
+      "repository": "volcengine/OpenViking",
+      "number": 4301,
+      "type": "pull_request",
+      "title": "fix(studio): make context tree keyboard accessible",
+      "author": "ranxi2001",
+      "sourceState": "open",
+      "state": "active",
+      "reasonCodes": ["open_unowned", "ci_pending"],
+      "roles": ["author"],
+      "createdAt": "2026-08-24T08:00:00.000Z",
+      "updatedAt": "2026-08-27T10:20:00.000Z",
+      "closedAt": null,
+      "labels": ["web", "accessibility"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "mergeable",
+      "reviewDecision": "review_required",
+      "checks": {
+        "status": "pending",
+        "total": 3,
+        "success": 2,
+        "failure": 0,
+        "pending": 1,
+        "jobs": [
+          { "name": "API/CLI", "status": "pending" },
+          { "name": "plugin", "status": "success" }
+        ]
+      },
+      "latestActivity": {
+        "actor": "automation",
+        "at": "2026-08-27T10:20:00.000Z",
+        "kind": "commented",
+        "byUser": false
+      },
+      "links": {
+        "item": "https://github.com/volcengine/OpenViking/pull/4301",
+        "repository": "https://github.com/volcengine/OpenViking",
+        "checks": "https://github.com/volcengine/OpenViking/pull/4301/checks",
+        "actions": "https://github.com/volcengine/OpenViking/actions"
+      },
+      "sourceFacts": [
+        "Authored pull request",
+        "Current head has checks in progress"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "sample-openviking-3904",
+      "url": "https://github.com/volcengine/OpenViking/pull/3904",
+      "repository": "volcengine/OpenViking",
+      "number": 3904,
+      "type": "pull_request",
+      "title": "fix: preserve quick-mode find semantics",
+      "author": "ranxi2001",
+      "sourceState": "merged",
+      "state": "completed",
+      "reasonCodes": ["item_merged"],
+      "roles": ["author"],
+      "createdAt": "2026-08-09T04:00:00.000Z",
+      "updatedAt": "2026-08-10T09:20:00.000Z",
+      "closedAt": "2026-08-10T09:20:00.000Z",
+      "labels": ["bug"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "unknown",
+      "reviewDecision": "approved",
+      "checks": {
+        "status": "success",
+        "total": 3,
+        "success": 3,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": {
+        "actor": "maintainer",
+        "at": "2026-08-10T09:20:00.000Z",
+        "kind": "reviewed",
+        "byUser": false
+      },
+      "links": {
+        "item": "https://github.com/volcengine/OpenViking/pull/3904",
+        "repository": "https://github.com/volcengine/OpenViking",
+        "checks": "https://github.com/volcengine/OpenViking/pull/3904/checks",
+        "actions": "https://github.com/volcengine/OpenViking/actions"
+      },
+      "sourceFacts": ["Authored pull request", "Pull request merged"],
+      "warnings": []
+    },
+    {
+      "id": "sample-hermes-85171",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/85171",
+      "repository": "NousResearch/hermes-agent",
+      "number": 85171,
+      "type": "pull_request",
+      "title": "feat(cli): add archive preview and help",
+      "author": "ranxi2001",
+      "sourceState": "open",
+      "state": "active",
+      "reasonCodes": ["open_unowned"],
+      "roles": ["author"],
+      "createdAt": "2026-08-26T11:00:00.000Z",
+      "updatedAt": "2026-08-28T12:15:00.000Z",
+      "closedAt": null,
+      "labels": ["cli"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "mergeable",
+      "reviewDecision": "review_required",
+      "checks": {
+        "status": "unavailable",
+        "total": 0,
+        "success": 0,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": null,
+      "links": {
+        "item": "https://github.com/NousResearch/hermes-agent/pull/85171",
+        "repository": "https://github.com/NousResearch/hermes-agent",
+        "checks": "https://github.com/NousResearch/hermes-agent/pull/85171/checks",
+        "actions": "https://github.com/NousResearch/hermes-agent/actions"
+      },
+      "sourceFacts": ["Authored pull request"],
+      "warnings": []
+    },
+    {
+      "id": "sample-book-624",
+      "url": "https://github.com/bojieli/ai-agent-book/pull/624",
+      "repository": "bojieli/ai-agent-book",
+      "number": 624,
+      "type": "pull_request",
+      "title": "docs: refine figure 10-11 layout across translations",
+      "author": "ranxi2001",
+      "sourceState": "open",
+      "state": "active",
+      "reasonCodes": ["open_unowned"],
+      "roles": ["author"],
+      "createdAt": "2026-08-26T07:20:00.000Z",
+      "updatedAt": "2026-08-27T09:40:00.000Z",
+      "closedAt": null,
+      "labels": ["documentation"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "mergeable",
+      "reviewDecision": "review_required",
+      "checks": {
+        "status": "success",
+        "total": 2,
+        "success": 2,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": {
+        "actor": "github-actions",
+        "at": "2026-08-27T09:40:00.000Z",
+        "kind": "commented",
+        "byUser": false
+      },
+      "links": {
+        "item": "https://github.com/bojieli/ai-agent-book/pull/624",
+        "repository": "https://github.com/bojieli/ai-agent-book",
+        "checks": "https://github.com/bojieli/ai-agent-book/pull/624/checks",
+        "actions": "https://github.com/bojieli/ai-agent-book/actions"
+      },
+      "sourceFacts": ["Authored pull request", "Current head checks passed"],
+      "warnings": []
+    },
+    {
+      "id": "sample-book-619",
+      "url": "https://github.com/bojieli/ai-agent-book/pull/619",
+      "repository": "bojieli/ai-agent-book",
+      "number": 619,
+      "type": "pull_request",
+      "title": "docs: rebalance figure 10-1 spacing",
+      "author": "ranxi2001",
+      "sourceState": "merged",
+      "state": "completed",
+      "reasonCodes": ["item_merged"],
+      "roles": ["author"],
+      "createdAt": "2026-08-22T05:20:00.000Z",
+      "updatedAt": "2026-08-24T07:30:00.000Z",
+      "closedAt": "2026-08-24T07:30:00.000Z",
+      "labels": ["documentation"],
+      "assignees": [],
+      "draft": false,
+      "mergeable": "unknown",
+      "reviewDecision": "approved",
+      "checks": {
+        "status": "success",
+        "total": 2,
+        "success": 2,
+        "failure": 0,
+        "pending": 0,
+        "jobs": []
+      },
+      "latestActivity": {
+        "actor": "maintainer",
+        "at": "2026-08-24T07:30:00.000Z",
+        "kind": "reviewed",
+        "byUser": false
+      },
+      "links": {
+        "item": "https://github.com/bojieli/ai-agent-book/pull/619",
+        "repository": "https://github.com/bojieli/ai-agent-book",
+        "checks": "https://github.com/bojieli/ai-agent-book/pull/619/checks",
+        "actions": "https://github.com/bojieli/ai-agent-book/actions"
+      },
+      "sourceFacts": ["Authored pull request", "Pull request merged"],
+      "warnings": []
+    }
+  ],
+  "syncStatus": "sample",
+  "rateLimit": {
+    "remaining": null,
+    "resetAt": null
+  },
+  "warnings": [
+    "Sample data is displayed. Run the collector or wait for the next Pages sync for current public activity."
+  ]
+}

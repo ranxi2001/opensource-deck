@@ -2,9 +2,9 @@
 
 ## Purpose
 
-OpenSourceDeck is a public, owner-maintained project for a static personal
-open-source contribution dashboard. The current phase is Milestone 0:
-repository bootstrap and product requirements.
+OpenSourceDeck is a public, owner-maintained project for a personal open-source
+contribution dashboard. The v0.1 implementation includes a static public mode
+and an optional OAuth relay for runtime private-repository access.
 
 ## Sources Of Truth
 
@@ -20,9 +20,11 @@ stale document in the same change.
 ## Product Invariants
 
 - v0.1 is read-only and must not mutate GitHub state.
-- v0.1 processes and publishes public GitHub data only.
-- Tokens must never enter browser code, generated JSON, logs, or Pages
-  artifacts.
+- Static snapshots process and publish public GitHub data only.
+- Private data is returned only at runtime to an authenticated browser and must
+  never enter generated JSON, logs, screenshots, or Pages artifacts.
+- GitHub tokens must remain inside the relay's encrypted HttpOnly cookie and
+  must never enter browser JavaScript.
 - Every derived action state has deterministic reason codes.
 - Repository identity always uses full `owner/name` coordinates.
 - Missing CI, review, or timeline data is unknown, never success.
@@ -36,6 +38,10 @@ stale document in the same change.
 - Treat all GitHub-provided text and URLs as untrusted input.
 - Use bounded concurrency and explicit pagination for API collection.
 - Keep Pages deployment artifact-based; do not commit generated data.
+- Keep public username lookup anonymous, bounded, and visibly degraded when
+  enrichment is unavailable.
+- Keep OAuth code exchange, token access, and private collection server-side.
+- Require exact origin allowlists and encrypted, expiring sessions.
 - Prefer established libraries for parsing, schemas, accessibility, and test
   tooling rather than ad hoc implementations.
 
@@ -49,14 +55,25 @@ Do not describe planned PRD behavior as implemented.
 
 ## Validation
 
-Until the application scaffold exists, documentation changes must pass:
+Required static checks:
 
 ```bash
-git diff --check
+npm run check
 ```
 
-Once implementation commands are added, record the exact format, lint, test,
-build, browser, and Pages validation commands here and in `CONTRIBUTING.md`.
+Required browser checks for user-facing changes:
+
+```bash
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+Use `npm run sync -- --output public/data/live.json` for public live-data
+validation. The output is ignored and must not be committed. Use the
+`browse-with-cdp` workflow for final desktop/mobile screenshots when available.
+
+The optional relay must pass `npm run worker:check`; never deploy it with
+placeholder OAuth or session secrets.
 
 ## Git And External Actions
 

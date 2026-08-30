@@ -1,63 +1,119 @@
 # OpenSourceDeck
 
 OpenSourceDeck is a personal command center for open-source contributions. It
-turns recent GitHub issues, pull requests, reviews, and CI results into one
-navigable, action-oriented workspace.
+turns GitHub issues, pull requests, reviews, and CI results into one navigable,
+action-oriented workspace.
 
-> Project status: bootstrap. The product requirements are defined, but the
-> dashboard application is not implemented yet.
+> Status: v0.1 implementation complete. Public GitHub Pages deployment is the
+> next release step. Private access requires a separately configured OAuth
+> relay.
 
-## Why
+![OpenSourceDeck desktop dashboard](docs/assets/dashboard-desktop.png)
 
-Contributors often participate in many repositories without owning any of
-them. GitHub exposes the underlying work, but it remains split across issue,
-pull request, review, notification, and repository pages. OpenSourceDeck aims
-to answer three questions from one page:
+## What It Does
 
-1. What needs my attention now?
-2. What is waiting on an upstream maintainer or contributor?
-3. Which projects have I worked on recently, and where should I navigate next?
+- Discovers contribution work from GitHub account activity instead of a manual
+  repository list.
+- Groups work by full `owner/name` repository identity.
+- Separates Needs action, Waiting upstream, Active, Completed, and Snoozed work.
+- Explains every state with deterministic source facts and reason codes.
+- Surfaces failing and pending CI, requested reviews, requested changes, merge
+  conflicts, labels, roles, and recent activity.
+- Provides responsive project navigation, filters, details, quick links,
+  themes, and keyboard command search.
 
-## Planned v0.1
+## Access Modes
 
-- Discover public GitHub work from recent account activity.
-- Group issues and pull requests by repository.
-- Classify work into Needs action, Waiting upstream, Active, and Completed.
-- Surface CI failures, review requests, requested changes, and stale work.
-- Provide keyboard-friendly links to repositories, issues, pull requests, and
-  workflow runs.
-- Refresh through GitHub Actions and deploy as a static GitHub Pages site.
-- Keep all credentials out of the browser and generated public data.
+### Public Username
 
-The complete product contract is in [docs/PRD.md](docs/PRD.md).
+Enter any GitHub username in the account panel. The browser performs a limited,
+anonymous, read-only lookup of recent public activity. The live view is capped
+at 20 recently active repositories and omits per-item CI, review, and comment
+enrichment to stay within anonymous API limits.
+
+The deployed snapshot for the repository owner is generated hourly by GitHub
+Actions with the repository-scoped `GITHUB_TOKEN`. It contains public data only.
+
+### GitHub Login And Private Repositories
+
+The optional relay under `worker/` implements GitHub OAuth with PKCE, server-side
+code exchange, exact origin checks, and an AES-GCM encrypted HttpOnly session
+cookie. The GitHub token is never returned to the frontend or written to the
+Pages artifact.
+
+Private mode requires a GitHub OAuth App and a deployed relay. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Same-site custom domains are
+recommended because browsers can block cross-site session cookies.
+
+## Local Development
+
+Requirements: Node.js 24 or newer.
+
+```bash
+npm ci
+npm run dev
+```
+
+The default development view uses committed public sample data. To collect a
+current public snapshot without committing it:
+
+```bash
+GITHUB_TOKEN="$(gh auth token)" npm run sync -- --output public/data/live.json
+VITE_DATA_FILE=data/live.json npm run dev
+```
+
+Do not use a token with private repository access for a static Pages snapshot.
+
+## Validation
+
+```bash
+npm run check
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+`npm run check` covers formatting, lint, TypeScript, 20 unit/component/security
+tests, production build, and a Cloudflare Worker dry-run. Playwright covers
+desktop and mobile interactions, Axe accessibility checks, and horizontal
+overflow.
+
+## Repository Map
+
+| Path                   | Purpose                                                     |
+| ---------------------- | ----------------------------------------------------------- |
+| `src/domain/`          | Versioned schemas, classification, aggregation, and filters |
+| `scripts/`             | GitHub collection and atomic snapshot generation            |
+| `src/components/`      | Operational dashboard and account access interface          |
+| `worker/`              | Optional OAuth relay for private repository mode            |
+| `e2e/`                 | Playwright and reusable CDP browser validation              |
+| `.github/workflows/`   | CI plus public snapshot and Pages deployment                |
+| `docs/PRD.md`          | Product requirements and acceptance contract                |
+| `docs/ARCHITECTURE.md` | Runtime, data, auth, and trust boundaries                   |
+| `docs/DEPLOYMENT.md`   | Pages and optional OAuth relay setup                        |
 
 ## Product Principles
 
-- Read-only first: v0.1 never mutates upstream repositories.
-- Explain every classification: deterministic reason codes, not opaque scores.
-- Public data only: a public Pages artifact must never contain private work.
-- Useful before configurable: account activity discovers projects; configuration
-  only pins, hides, or annotates them.
+- Read-only: OpenSourceDeck never mutates upstream GitHub state.
+- Explainable: deterministic reason codes, not opaque scores.
+- Public artifact: private repository data never enters static build output.
+- Secure sessions: private tokens stay inside the relay's encrypted HttpOnly
+  cookie.
 - Dashboard first: the application opens on the working view, not a marketing
-  landing page.
+  page.
 
 ## Prior Art
 
-OpenSourceDeck is informed by projects such as
+OpenSourceDeck is informed by
 [PersonalDashboard](https://github.com/roshkhatri/PersonalDashboard),
 [gh-dash](https://github.com/dlvhdr/gh-dash), and
-[Octobox](https://github.com/octobox/octobox). No third-party source code is
-included in this bootstrap commit.
+[Octobox](https://github.com/octobox/octobox). It is an independent
+implementation and does not include their source code.
 
-## Contributing
+## Contributing And Security
 
-The project is currently turning the PRD into an implementation plan. Read
-[CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
-
-## Security
-
-OpenSourceDeck will process public GitHub metadata through scheduled workflows.
-Review [SECURITY.md](SECURITY.md) before reporting a security or privacy issue.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Do not open a
+public issue for a vulnerability or private-data exposure; follow
+[SECURITY.md](SECURITY.md).
 
 ## License
 

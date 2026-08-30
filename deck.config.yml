@@ -1,0 +1,12 @@
+schema_version: 1
+github_user: ranxi2001
+lookback_days: 90
+completed_retention_days: 30
+
+projects: {}
+
+exclude:
+  repositories: []
+  labels: []
+
+overrides: {}

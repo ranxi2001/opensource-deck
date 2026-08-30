@@ -1,8 +1,7 @@
 # Contributing To OpenSourceDeck
 
-OpenSourceDeck is currently in its bootstrap phase. Contributions should first
-improve the product contract, reduce implementation risk, or establish one of
-the milestones in `docs/PRD.md`.
+OpenSourceDeck has a working v0.1 implementation. Contributions should preserve
+the product, data, and security contracts in `docs/PRD.md`.
 
 ## Before Starting
 
@@ -17,7 +16,9 @@ the milestones in `docs/PRD.md`.
 - Add tests with implementation changes.
 - Update the PRD when changing scope, state semantics, generated data, security,
   or acceptance criteria.
-- Do not add private-data support or GitHub mutations as an incidental feature.
+- Changes to OAuth, cookies, origin policy, private-data flow, or GitHub
+  permissions require an explicit security design and regression tests.
+- Do not add GitHub mutations as an incidental feature.
 - Do not commit credentials, tokens, generated API dumps, or private activity.
 
 ## Commit Style
@@ -34,15 +35,15 @@ Use conventional prefixes such as:
 
 ## Validation
 
-During Milestone 0, run:
+Run:
 
 ```bash
-git diff --check
+npm run check
+npm run test:e2e
 ```
 
-Implementation pull requests must run the repository commands that will be
-added with the application scaffold. State any skipped browser, network, or
-Pages validation explicitly.
+Install Playwright's Chromium dependencies first when needed. State any skipped
+live GitHub, OAuth, browser, Worker, or Pages validation explicitly.
 
 ## Pull Requests
 
