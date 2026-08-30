@@ -10,6 +10,7 @@ and an optional OAuth relay for runtime private-repository access.
 
 - `docs/PRD.md`: product behavior, security boundaries, scope, and acceptance.
 - `README.md`: public project status and concise orientation.
+- `cli/` and `skills/opensource-deck/`: terminal and Agent operating contracts.
 - Source manifests and CI workflows: executable commands once implementation
   begins.
 - This file: repository-wide engineering rules.
@@ -29,6 +30,10 @@ stale document in the same change.
 - Repository identity always uses full `owner/name` coordinates.
 - Missing CI, review, or timeline data is unknown, never success.
 - The application opens on the operational dashboard, not a marketing page.
+- CLI sync and Agent Skill output remain public-only, even when a GitHub token
+  is available for rate limits and public enrichment.
+- Candidate labels and assignment state are screening evidence, not permission
+  to start or publish a contribution.
 
 ## Engineering Direction
 
@@ -60,6 +65,9 @@ Required static checks:
 ```bash
 npm run check
 ```
+
+`npm run check` must build and exercise the source-distributed CLI. Validate
+the repository Skill with the Skill Creator validator when it changes.
 
 Required browser checks for user-facing changes:
 

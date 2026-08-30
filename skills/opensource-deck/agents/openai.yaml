@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSourceDeck"
+  short_description: "Inspect open-source work and scout issues from the CLI"
+  default_prompt: "Use $opensource-deck to review my contribution queue and find suitable recent issues."

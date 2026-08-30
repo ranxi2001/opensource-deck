@@ -24,6 +24,7 @@
     "playwright.config.ts",
     "eslint.config.js",
     "scripts/**/*.ts",
+    "cli/**/*.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "e2e/**/*.ts"

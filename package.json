@@ -5,12 +5,41 @@
   "type": "module",
   "description": "A personal command center for open-source contributions.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ranxi2001/opensource-deck.git"
+  },
+  "homepage": "https://onefly.top/opensource-deck/",
+  "bugs": {
+    "url": "https://github.com/ranxi2001/opensource-deck/issues"
+  },
+  "keywords": [
+    "github",
+    "open-source",
+    "contributions",
+    "issues",
+    "cli",
+    "agent-skill"
+  ],
+  "files": [
+    "dist-cli/",
+    "skills/opensource-deck/",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "opensource-deck": "dist-cli/osdeck.cjs",
+    "osdeck": "dist-cli/osdeck.cjs"
+  },
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run build:web && npm run build:cli",
+    "build:web": "tsc -b && vite build",
+    "build:cli": "tsx scripts/build-cli.ts",
+    "cli": "tsx cli/index.ts",
     "preview": "vite preview",
     "sync": "tsx scripts/sync-github.ts",
     "format": "prettier --write .",
@@ -22,7 +51,8 @@
     "test:e2e": "playwright test",
     "worker:check": "wrangler deploy --dry-run --config worker/wrangler.jsonc",
     "worker:dev": "wrangler dev --config worker/wrangler.jsonc",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run worker:check"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run worker:check",
+    "prepare": "npm run build:cli"
   },
   "dependencies": {
     "lucide-react": "^1.37.0",
@@ -42,6 +72,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
+    "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.5",

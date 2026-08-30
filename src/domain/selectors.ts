@@ -16,7 +16,7 @@ export interface WorkFilters {
 }
 
 export type RecentIssueSignalFilter =
-  "all" | "unassigned" | "contribution_label" | "assigned";
+  "all" | "contribution_label" | IssueSignal;
 
 export interface RecentIssueFilters {
   project: string | "all";

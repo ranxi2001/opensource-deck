@@ -79,11 +79,11 @@ export function Header({
           <span>快速查找</span>
         </button>
         <button
-          className="icon-button"
+          className="icon-button reload-button"
           type="button"
           onClick={onReload}
-          aria-label="重新加载仪表盘数据"
-          title="重新加载"
+          aria-label="获取 GitHub 最新状态"
+          title="获取 GitHub 最新状态"
           disabled={reloading}
         >
           <RefreshCw size={18} className={reloading ? "spin" : undefined} />

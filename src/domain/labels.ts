@@ -1,4 +1,4 @@
-import type { ReasonCode, Role, WorkState } from "./schema";
+import type { IssueSignal, ReasonCode, Role, WorkState } from "./schema";
 
 export const STATE_LABELS: Record<WorkState, string> = {
   needs_action: "需要处理",
@@ -34,6 +34,14 @@ export const ROLE_LABELS: Record<Role, string> = {
   reviewed: "已审阅",
   mentioned: "被提及",
   involved: "已参与",
+};
+
+export const ISSUE_SIGNAL_LABELS: Record<IssueSignal, string> = {
+  unassigned: "未指派",
+  assigned: "已指派",
+  good_first_issue: "适合首次贡献",
+  help_wanted: "欢迎协助",
+  needs_triage: "待分类",
 };
 
 const SOURCE_FACT_LABELS: Record<string, string> = {

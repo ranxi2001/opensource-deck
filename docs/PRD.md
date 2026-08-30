@@ -249,32 +249,38 @@ that a maintainer has accepted responsibility or promised a response.
 
 ## 9. Functional Requirements
 
-| ID     | Requirement                                                                       | Priority |
-| ------ | --------------------------------------------------------------------------------- | -------- |
-| FR-001 | Configure one public GitHub username                                              | Must     |
-| FR-002 | Discover recent public issues and pull requests across repositories               | Must     |
-| FR-003 | Preserve user roles such as author, assignee, reviewer, and mentioned participant | Must     |
-| FR-004 | Group all work by full repository name                                            | Must     |
-| FR-005 | Classify work using the state contract in section 8                               | Must     |
-| FR-006 | Display Needs action, Waiting upstream, Active, and Completed views               | Must     |
-| FR-007 | Display exact reason codes and data freshness                                     | Must     |
-| FR-008 | Link directly to repository, issue, pull request, checks, and Actions pages       | Must     |
-| FR-009 | Search by repository, item number, title, and label                               | Must     |
-| FR-010 | Filter by state, item type, role, organization, and freshness                     | Must     |
-| FR-011 | Pin, alias, hide, or annotate projects through versioned configuration            | Should   |
-| FR-012 | Snooze an item through versioned public configuration                             | Should   |
-| FR-013 | Support keyboard navigation and a command palette                                 | Should   |
-| FR-014 | Show partial-sync warnings without discarding successful data                     | Must     |
-| FR-015 | Refresh on a schedule and through manual workflow dispatch                        | Must     |
-| FR-016 | Retain completed items for a configurable period, default 30 days                 | Should   |
-| FR-017 | Render well at 360 px mobile width and common desktop widths                      | Must     |
-| FR-018 | Accept any valid GitHub username for bounded public browser lookup                | Must     |
-| FR-019 | Support GitHub OAuth private-repository data through a server-side relay          | Must     |
-| FR-020 | Keep private tokens and data out of browser JavaScript and Pages artifacts        | Must     |
-| FR-021 | Use Simplified Chinese as the default interface language                          | Must     |
-| FR-022 | Discover open issues updated within 30 days in recently active repositories       | Must     |
-| FR-023 | Filter issue candidates by repository, keyword, assignment, and public labels     | Must     |
-| FR-024 | Explain that issue-candidate signals do not establish ownership or acceptance     | Must     |
+| ID     | Requirement                                                                           | Priority |
+| ------ | ------------------------------------------------------------------------------------- | -------- |
+| FR-001 | Configure one public GitHub username                                                  | Must     |
+| FR-002 | Discover recent public issues and pull requests across repositories                   | Must     |
+| FR-003 | Preserve user roles such as author, assignee, reviewer, and mentioned participant     | Must     |
+| FR-004 | Group all work by full repository name                                                | Must     |
+| FR-005 | Classify work using the state contract in section 8                                   | Must     |
+| FR-006 | Display Needs action, Waiting upstream, Active, and Completed views                   | Must     |
+| FR-007 | Display exact reason codes and data freshness                                         | Must     |
+| FR-008 | Link directly to repository, issue, pull request, checks, and Actions pages           | Must     |
+| FR-009 | Search by repository, item number, title, and label                                   | Must     |
+| FR-010 | Filter by state, item type, role, organization, and freshness                         | Must     |
+| FR-011 | Pin, alias, hide, or annotate projects through versioned configuration                | Should   |
+| FR-012 | Snooze an item through versioned public configuration                                 | Should   |
+| FR-013 | Support keyboard navigation and a command palette                                     | Should   |
+| FR-014 | Show partial-sync warnings without discarding successful data                         | Must     |
+| FR-015 | Refresh on a schedule and through manual workflow dispatch                            | Must     |
+| FR-016 | Retain completed items for a configurable period, default 30 days                     | Should   |
+| FR-017 | Render well at 360 px mobile width and common desktop widths                          | Must     |
+| FR-018 | Accept any valid GitHub username for bounded public browser lookup                    | Must     |
+| FR-019 | Support GitHub OAuth private-repository data through a server-side relay              | Must     |
+| FR-020 | Keep private tokens and data out of browser JavaScript and Pages artifacts            | Must     |
+| FR-021 | Use Simplified Chinese as the default interface language                              | Must     |
+| FR-022 | Discover open issues updated within 30 days in recently active repositories           | Must     |
+| FR-023 | Filter issue candidates by repository, keyword, assignment, and public labels         | Must     |
+| FR-024 | Explain that issue-candidate signals do not establish ownership or acceptance         | Must     |
+| FR-025 | Expose summary, project, work, candidate, lookup, URL, and public-sync CLI commands   | Must     |
+| FR-026 | Provide stable JSON envelopes with source, totals, and returned counts for agents     | Must     |
+| FR-027 | Accept deployed HTTP artifacts and schema-valid local JSON as CLI sources             | Must     |
+| FR-028 | Keep CLI collection public-only even when an API token is available                   | Must     |
+| FR-029 | Distribute an Agent Skill that preserves freshness and contribution action gates      | Should   |
+| FR-030 | Refresh a static snapshot through a fresh public GitHub lookup, not the same artifact | Must     |
 
 ## 10. Information Architecture
 
@@ -305,6 +311,26 @@ that a maintainer has accepted responsibility or promised a response.
 - Switch queue or project.
 
 All unfamiliar icon-only commands require tooltips and accessible names.
+
+### 10.4 CLI And Agent Interface
+
+The `osdeck` CLI presents the same generated-data contract through concise
+human tables and deterministic JSON envelopes. It provides `summary`,
+`projects`, `work`, `issues`, `show`, `url`, and public `sync` commands.
+
+CLI reads resolve from an explicit source, an environment-configured source, a
+local public cache, or the canonical deployed artifact. List JSON includes the
+source, total matches, returned count, and full normalized items so agents can
+detect stale or truncated evidence.
+
+CLI collection remains public-only. A token may improve rate limits and public
+enrichment but must never make private items eligible for CLI output. Private
+repository access remains in the no-store OAuth browser path.
+
+The repository-distributed Agent Skill instructs agents to inspect freshness,
+warnings, reasons, and source facts, then verify live GitHub issue ownership,
+comments, overlapping pull requests, and repository instructions. It does not
+authorize comments, assignments, pushes, reviews, or pull requests.
 
 ## 11. Configuration Contract
 
@@ -461,6 +487,10 @@ OAuth and session secrets are not available to the Pages workflow.
 
 - Scheduled refresh defaults to once per hour.
 - Manual `workflow_dispatch` is available.
+- In the browser, refreshing a deployed snapshot performs a bounded anonymous
+  GitHub lookup for the displayed user. It updates public item source state and
+  timestamps without waiting for Pages, while clearly reporting omitted CI,
+  review, and comment enrichment.
 - The UI shows `generatedAt` and considers data stale after two expected
   intervals.
 - Schedule delay is expected; the product does not claim real-time state.
@@ -497,6 +527,8 @@ read-only contribution workspace.
 - A failed optional enrichment records a warning and keeps the normalized item.
 - Rate limiting records the reset time and fails with a useful diagnostic; the
   collector does not retry indefinitely.
+- A failed in-browser refresh retains the last successful data and exposes the
+  error in the main status banner.
 - One malformed API item is quarantined with a warning rather than crashing the
   complete build.
 - Generated data is written atomically inside the workflow workspace.
@@ -537,6 +569,9 @@ read-only contribution workspace.
 - UI components do not depend on raw API response shapes.
 - Generated schemas and fixtures document compatibility.
 - Formatting, lint, unit, build, and smoke commands run in CI.
+- CLI filtering reuses the domain schemas and selectors rather than defining a
+  second state model.
+- Human terminal output removes control sequences from GitHub-provided text.
 
 ## 17. Success Metrics
 
@@ -558,6 +593,8 @@ v0.1 is successful when:
 8. A merged or closed item leaves active queues and remains in recent history.
 9. The principal desktop and mobile workflows pass automated accessibility and
    browser smoke tests.
+10. A user or agent can inspect the same public queues through the CLI without
+    parsing raw GitHub API responses.
 
 No product analytics are required for v0.1. Repository adoption, forks, stars,
 and issues may be observed through GitHub without adding client telemetry.
@@ -583,6 +620,10 @@ and issues may be observed through GitHub without adding client telemetry.
 - [x] Keyboard-only navigation covers queue, project, item, and quick-link flows.
 - [x] The repository documents setup, architecture, security, and contribution
       commands before `v0.1.0`.
+- [x] CLI human and JSON modes expose summaries, filtered work, recent Issue
+      candidates, exact lookup, URL output, and public sync.
+- [x] The companion Agent Skill treats candidate signals as screening evidence
+      and preserves authorization for external GitHub mutations.
 
 ## 19. Delivery Plan
 
@@ -615,7 +656,8 @@ and issues may be observed through GitHub without adding client telemetry.
 
 ### Milestone 4: Public Beta
 
-- Fork-and-configure documentation.
+- [x] Fork-and-configure documentation.
+- [x] Source-distributed CLI and Agent Skill.
 - Browser matrix and 500-item performance validation.
 - Security review and dependency audit.
 - `v0.1.0` release criteria and changelog.

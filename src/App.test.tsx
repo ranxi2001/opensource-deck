@@ -12,12 +12,36 @@ import App from "./App";
 beforeEach(() => {
   vi.stubGlobal(
     "fetch",
-    vi.fn(
-      async () =>
-        new Response(JSON.stringify(sample), {
-          headers: { "Content-Type": "application/json" },
-        }),
-    ),
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), window.location.origin);
+      if (url.hostname === "api.github.com") {
+        if (url.pathname === "/search/issues") {
+          return new Response(
+            JSON.stringify({
+              total_count: 0,
+              incomplete_results: false,
+              items: [],
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (url.pathname === "/users/ranxi2001") {
+          return new Response(
+            JSON.stringify({
+              login: sample.sourceUser.login,
+              name: sample.sourceUser.name,
+              avatar_url: sample.sourceUser.avatarUrl,
+              html_url: sample.sourceUser.profileUrl,
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        throw new Error(`Unexpected GitHub request: ${url.pathname}`);
+      }
+      return new Response(JSON.stringify(sample), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }),
   );
   vi.stubGlobal("matchMedia", () => ({
     matches: false,
@@ -105,5 +129,25 @@ describe("App", () => {
         "Correct broken links in the memory systems chapter",
       ),
     ).toBeNull();
+  });
+
+  it("refreshes a deployed snapshot from the live public GitHub API", async () => {
+    render(<App />);
+    await screen.findByRole("heading", { name: "我的上游贡献" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "获取 GitHub 最新状态" }),
+    );
+    await waitFor(() =>
+      expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hostname: "api.github.com",
+          pathname: "/search/issues",
+        }),
+        expect.objectContaining({ method: "GET" }),
+      ),
+    );
+    expect(
+      await screen.findByText(/公开账户查询最多处理 20 个近期活跃仓库/),
+    ).toBeVisible();
   });
 });

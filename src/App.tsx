@@ -192,6 +192,7 @@ function DashboardSummary({
 export default function App() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [reloading, setReloading] = useState(false);
   const [source, setSource] = useState<DataSource>(initialDataSource);
@@ -220,13 +221,14 @@ export default function App() {
         hasData.current = true;
         setData(loaded);
         setError(null);
+        setDataError(null);
         setAccountError(null);
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
         const message =
           cause instanceof Error ? cause.message : "无法加载仪表盘数据。";
-        if (hasData.current) setAccountError(message);
+        if (hasData.current) setDataError(message);
         else setError(message);
       })
       .finally(() => {
@@ -368,7 +370,12 @@ export default function App() {
         onOpenAccount={() => setAccountOpen(true)}
         onReload={() => {
           setReloading(true);
-          setReloadKey((value) => value + 1);
+          setDataError(null);
+          if (source.mode === "snapshot") {
+            setSource({ mode: "public", username: data.sourceUser.login });
+          } else {
+            setReloadKey((value) => value + 1);
+          }
         }}
         reloading={reloading}
       />
@@ -386,20 +393,27 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
       <main className="dashboard-main">
-        {(data.syncStatus !== "success" || stale) && (
+        {(dataError || data.syncStatus !== "success" || stale) && (
           <div
-            className={`data-banner ${stale ? "banner-stale" : ""}`}
+            className={`data-banner ${dataError || stale ? "banner-stale" : ""}`}
             role="status"
           >
-            {stale ? <AlertTriangle size={17} /> : <CircleDot size={17} />}
-            <span>
-              {stale
-                ? "最近一次成功同步已超过两个同步周期。"
-                : data.warnings[0]}
-            </span>
-            {data.warnings.length > 1 && (
-              <small>另有 {data.warnings.length - 1} 条</small>
+            {dataError || stale ? (
+              <AlertTriangle size={17} />
+            ) : (
+              <CircleDot size={17} />
             )}
+            <span>
+              {dataError ??
+                (stale
+                  ? "最近一次成功同步已超过两个同步周期。"
+                  : data.warnings[0])}
+            </span>
+            {dataError ? (
+              <small>保留上次成功数据</small>
+            ) : data.warnings.length > 1 ? (
+              <small>另有 {data.warnings.length - 1} 条</small>
+            ) : null}
           </div>
         )}
         <DashboardSummary
@@ -496,6 +510,7 @@ export default function App() {
           }
           setReloading(true);
           setAccountError(null);
+          setDataError(null);
           setFilters(initialFilters);
           setIssueFilters(initialIssueFilters);
           setSelected(null);
@@ -505,6 +520,7 @@ export default function App() {
         onConnectGitHub={() => beginGitHubLogin()}
         onUseSnapshot={() => {
           setReloading(true);
+          setDataError(null);
           setFilters(initialFilters);
           setIssueFilters(initialIssueFilters);
           setSelected(null);

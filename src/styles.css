@@ -2049,7 +2049,7 @@ a {
     text-overflow: ellipsis;
   }
 
-  .header-actions [aria-label="重新加载仪表盘数据"] {
+  .header-actions .reload-button {
     display: none;
   }
 

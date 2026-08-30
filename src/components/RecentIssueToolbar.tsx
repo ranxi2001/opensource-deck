@@ -3,12 +3,15 @@ import type { RecentIssueFilters } from "../domain/selectors";
 
 interface RecentIssueToolbarProps {
   filters: RecentIssueFilters;
-  counts: Record<RecentIssueFilters["signal"], number>;
+  counts: Record<RecentIssueToolbarSignal, number>;
   onChange: (next: RecentIssueFilters) => void;
 }
 
+type RecentIssueToolbarSignal =
+  "all" | "unassigned" | "contribution_label" | "assigned";
+
 const options: Array<{
-  value: RecentIssueFilters["signal"];
+  value: RecentIssueToolbarSignal;
   label: string;
 }> = [
   { value: "all", label: "全部 Issue" },

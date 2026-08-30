@@ -5,16 +5,9 @@ import {
   MessageSquareText,
   UserRound,
 } from "lucide-react";
-import type { IssueSignal, RecentIssue } from "../domain/schema";
+import { ISSUE_SIGNAL_LABELS } from "../domain/labels";
+import type { RecentIssue } from "../domain/schema";
 import { relativeTime } from "../domain/time";
-
-const SIGNAL_LABELS: Record<IssueSignal, string> = {
-  unassigned: "未指派",
-  assigned: "已指派",
-  good_first_issue: "适合首次贡献",
-  help_wanted: "欢迎协助",
-  needs_triage: "待分类",
-};
 
 interface RecentIssueTableProps {
   issues: RecentIssue[];
@@ -63,7 +56,7 @@ export function RecentIssueTable({ issues }: RecentIssueTableProps) {
                   <strong>{issue.title}</strong>
                   <span className="mobile-work-meta">
                     {issue.signals[0]
-                      ? SIGNAL_LABELS[issue.signals[0]]
+                      ? ISSUE_SIGNAL_LABELS[issue.signals[0]]
                       : "公开 Issue"}{" "}
                     / {relativeTime(issue.updatedAt)}
                   </span>
@@ -73,7 +66,7 @@ export function RecentIssueTable({ issues }: RecentIssueTableProps) {
             <div className="work-roles issue-signals" role="cell">
               {issue.signals.slice(0, 3).map((signal) => (
                 <span key={signal} className={`issue-signal signal-${signal}`}>
-                  {SIGNAL_LABELS[signal]}
+                  {ISSUE_SIGNAL_LABELS[signal]}
                 </span>
               ))}
             </div>

@@ -21,6 +21,10 @@ flowchart LR
     P --> V[Browser workspace]
     L --> V
     D --> V
+
+    J --> Q[osdeck CLI]
+    Q --> T[Terminal or agent]
+    Q --> G
 ```
 
 The static artifact never contains private repository data. Private data exists
@@ -77,8 +81,34 @@ selection, and safe external links. Simplified Chinese is the default UI. A
 separate recent-issue view filters public assignment and contribution-label
 signals without interpreting them as ownership or acceptance.
 
-The frontend has no GitHub write operation. Reload means re-fetching the active
-data source, not rerunning CI or mutating notifications.
+The frontend has no GitHub write operation. Reloading a static snapshot switches
+to the bounded browser collector so public PR source state can change without
+waiting for the next Pages artifact. Subsequent live or private reloads re-fetch
+their active source. Anonymous refresh does not claim full CI, review, or comment
+enrichment, and failures retain the last successful dashboard behind a visible
+status banner.
+
+## CLI And Agent Skill
+
+`cli/` is a Node 24 command interface over the same Zod schema, selectors,
+labels, collector, and GitHub adapter used by the application. Reads accept an
+HTTP artifact or local JSON. Public sync writes atomically to a permission-
+restricted cache or explicit destination. A token can improve public rate
+limits and enrichment, but the collector is always called with private
+inclusion disabled.
+
+Human tables sanitize control characters and ANSI sequences from untrusted
+GitHub text. JSON mode uses stable envelopes with source, total, returned, and
+normalized data fields. The CLI bundle is a generated CommonJS executable for
+Node 24; generated `dist-cli/` output is not committed.
+
+`skills/opensource-deck/` is the repository-owned Agent workflow. It uses CLI
+JSON as evidence, checks freshness and truncation, and routes candidate
+selection back through live repository instructions and issue state. It does
+not add a GitHub mutation path or imply authorization to claim or publish work.
+
+Private repository data is intentionally absent from the CLI and Agent Skill.
+It remains confined to the encrypted, no-store OAuth browser flow.
 
 ## Private Authentication
 
