@@ -27,11 +27,11 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run check
       - name: Collect public GitHub activity
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run sync -- --output public/data/dashboard.json
-      - run: npm run check
       - name: Build project site
         env:
           VITE_BASE_PATH: /opensource-deck/
