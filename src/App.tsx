@@ -24,7 +24,11 @@ import {
   loadPrivateDashboard,
   logoutPrivateSession,
 } from "./data/auth-client";
-import { lookupPublicUser, publicUsernameIsValid } from "./data/public-lookup";
+import {
+  lookupPublicUser,
+  publicUsernameIsValid,
+  refreshPublicUser,
+} from "./data/public-lookup";
 import { STATE_LABELS } from "./domain/labels";
 import type { DashboardData, WorkItem, WorkState } from "./domain/schema";
 import {
@@ -371,7 +375,20 @@ export default function App() {
           setReloading(true);
           setDataError(null);
           if (source.mode === "snapshot") {
-            setSource({ mode: "public", username: data.sourceUser.login });
+            void refreshPublicUser(data)
+              .then((loaded) => {
+                setData(loaded);
+                setError(null);
+                setDataError(null);
+              })
+              .catch((cause: unknown) => {
+                setDataError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "无法刷新公开 GitHub 状态。",
+                );
+              })
+              .finally(() => setReloading(false));
           } else {
             setReloadKey((value) => value + 1);
           }

@@ -8,6 +8,9 @@
   a linked alternative.
 - Personal forks now derive the dashboard user and Pages base path from the
   repository context, so deployment requires no tracked-file changes.
+- Browser refresh now preserves the deployed snapshot while updating
+  current-head CI, review, comment, and merge state for priority authored or
+  reviewed pull requests.
 
 ## [0.1.0] - 2026-08-30
 

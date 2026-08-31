@@ -1,4 +1,7 @@
-import { collectDashboard } from "../../scripts/lib/collector";
+import {
+  collectDashboard,
+  refreshPublicDashboard,
+} from "../../scripts/lib/collector";
 import { GitHubClient } from "../../scripts/lib/github";
 import type { DashboardData, DeckConfig } from "../domain/schema";
 
@@ -29,5 +32,15 @@ export async function lookupPublicUser(
     config,
     concurrency: 4,
     collectionMode: "public_browser",
+  });
+}
+
+export async function refreshPublicUser(
+  dashboard: DashboardData,
+): Promise<DashboardData> {
+  return await refreshPublicDashboard({
+    client: new GitHubClient(),
+    dashboard,
+    concurrency: 4,
   });
 }

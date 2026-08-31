@@ -62,11 +62,13 @@ check runs, mergeability, and public fork links. Requests use bounded
 concurrency and explicit pagination. Optional enrichment failures become
 warnings and never turn missing CI into success.
 
-Browser public lookup is intentionally limited to 20 recently active
-repositories and skips per-item enrichment to stay within anonymous limits. It
-scans the first 8 repositories for open issues updated within 30 days; full
-collection scans at most 20. Issues already present in the contribution
-workspace are excluded from the candidate list.
+Browser public lookup is limited to 20 recently active repositories. It uses
+the anonymous core-rate budget to enrich the 5 most recently updated open pull
+requests where the configured user is an author or reviewer with current-head
+checks, reviews, comments, and merge state. Other open work is explicitly
+marked incomplete. Candidate discovery scans the first 8 repositories for open
+issues updated within 30 days; full collection scans at most 20. Issues already
+present in the contribution workspace are excluded from the candidate list.
 
 The sync command writes a temporary file and atomically renames it to the output
 path. Live local output is ignored by Git.
@@ -81,12 +83,14 @@ selection, and safe external links. Simplified Chinese is the default UI. A
 separate recent-issue view filters public assignment and contribution-label
 signals without interpreting them as ownership or acceptance.
 
-The frontend has no GitHub write operation. Reloading a static snapshot switches
-to the bounded browser collector so public PR source state can change without
-waiting for the next Pages artifact. Subsequent live or private reloads re-fetch
-their active source. Anonymous refresh does not claim full CI, review, or comment
-enrichment, and failures retain the last successful dashboard behind a visible
-status banner.
+The frontend has no GitHub write operation. Reloading a static snapshot keeps
+the snapshot as its baseline and directly refreshes up to 10 recent open pull
+requests where the user is an author or reviewer. This updates current-head CI,
+reviews, comments, and merge state without discarding other enriched work or
+candidate issues. Subsequent public-account lookups and private reloads re-fetch
+their active source. Failures preserve the last known CI and review values,
+mark action ownership incomplete when its timeline is unavailable, and retain
+the last successful dashboard behind a visible status banner.
 
 ## CLI And Agent Skill
 

@@ -36,6 +36,56 @@ beforeEach(() => {
             { headers: { "Content-Type": "application/json" } },
           );
         }
+        if (/\/issues\/\d+\/comments$/.test(url.pathname)) {
+          return new Response(
+            JSON.stringify([
+              {
+                user: { login: "ranxi2001" },
+                created_at: "2026-08-31T01:00:00.000Z",
+                updated_at: "2026-08-31T01:00:00.000Z",
+              },
+            ]),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        const pullMatch = url.pathname.match(/^\/repos\/(.+)\/pulls\/(\d+)$/);
+        if (pullMatch) {
+          return new Response(
+            JSON.stringify({
+              state: "open",
+              updated_at: "2026-08-31T01:00:00.000Z",
+              closed_at: null,
+              merged_at: null,
+              draft: false,
+              mergeable: true,
+              mergeable_state: "clean",
+              requested_reviewers: [],
+              head: { sha: `refreshed-${pullMatch[2]}` },
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (/\/commits\/refreshed-\d+\/check-runs$/.test(url.pathname)) {
+          return new Response(
+            JSON.stringify({
+              total_count: 1,
+              check_runs: [
+                {
+                  name: "current-head-ci",
+                  status: "in_progress",
+                  conclusion: null,
+                  html_url: null,
+                },
+              ],
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (/\/pulls\/\d+\/reviews$/.test(url.pathname)) {
+          return new Response(JSON.stringify([]), {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
         throw new Error(`Unexpected GitHub request: ${url.pathname}`);
       }
       return new Response(JSON.stringify(sample), {
@@ -131,7 +181,7 @@ describe("App", () => {
     ).toBeNull();
   });
 
-  it("refreshes a deployed snapshot from the live public GitHub API", async () => {
+  it("refreshes current-head CI without replacing the deployed snapshot", async () => {
     render(<App />);
     await screen.findByRole("heading", { name: "我的上游贡献" });
     fireEvent.click(
@@ -141,13 +191,33 @@ describe("App", () => {
       expect(vi.mocked(fetch)).toHaveBeenCalledWith(
         expect.objectContaining({
           hostname: "api.github.com",
-          pathname: "/search/issues",
+          pathname:
+            "/repos/kvcache-ai/AgentENV/commits/refreshed-230/check-runs",
         }),
         expect.objectContaining({ method: "GET" }),
       ),
     );
+    const title = await screen.findByText(
+      "fix: preserve anonymous OverlayBD credential mode",
+    );
     expect(
-      await screen.findByText(/公开账户查询最多处理 20 个近期活跃仓库/),
+      within(title.closest('[role="row"]') as HTMLElement).getByRole("img", {
+        name: "1 项检查进行中",
+      }),
     ).toBeVisible();
+    const searchRequests = vi
+      .mocked(fetch)
+      .mock.calls.filter(([input]) =>
+        new URL(String(input), window.location.origin).pathname.includes(
+          "/search/issues",
+        ),
+      );
+    expect(searchRequests).toHaveLength(1);
+    expect(
+      new URL(
+        String(searchRequests[0]?.[0]),
+        window.location.origin,
+      ).searchParams.get("q"),
+    ).toBe("involves:ranxi2001 is:pr is:open");
   });
 });

@@ -92,8 +92,11 @@ for custom domains and the optional private-repository relay.
 
 Enter any GitHub username in the account panel. The browser performs a limited,
 anonymous, read-only lookup of recent public activity. The live view is capped
-at 20 recently active repositories and omits per-item CI, review, and comment
-enrichment to stay within anonymous API limits.
+at 20 recently active repositories. Within anonymous API limits, it enriches
+the 5 most recently updated open pull requests where the user is an author or
+reviewer with current-head CI, reviews, comments, and merge state. Other items
+are explicitly marked incomplete instead of treating unknown data as success or
+Waiting upstream.
 
 Recent-issue discovery scans the first 8 of those repositories. Authenticated
 collection scans up to 20 repositories. Candidates use only public signals such
@@ -103,11 +106,13 @@ starting work.
 
 The deployed snapshot for the repository owner is generated hourly by GitHub
 Actions with the repository-scoped `GITHUB_TOKEN`. It contains public data only.
-The header refresh button switches a deployed snapshot to a fresh anonymous
-GitHub lookup instead of downloading the same static JSON again. This can
-update public PR open/closed/merged state and timestamps without waiting for
-the next Pages sync, but GitHub search indexing can still lag and CI, review,
-and comment enrichment remains limited until the next full sync.
+The header refresh button preserves the full snapshot and candidate issues,
+then refreshes the current head, CI, reviews, comments, and merge state for up
+to 10 recent open pull requests where the user is an author or reviewer. A new
+commit can therefore be tracked immediately without waiting for the next Pages
+sync. When more than 10 priority pull requests are open, the remainder keep the
+last snapshot data; manually running **Sync and deploy Pages** performs a full
+sync.
 
 ### GitHub Login And Private Repositories
 

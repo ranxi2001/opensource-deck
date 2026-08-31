@@ -45,13 +45,18 @@ export function classifyWorkItem(input: ClassificationInput): Classification {
   if (input.sourceState === "closed")
     return { state: "completed", reasonCodes: ["item_closed"] };
 
-  if (input.checks.status === "failure") reasons.push("ci_failure");
+  if (input.checks.status === "failure" && input.roles.includes("author"))
+    reasons.push("ci_failure");
   if (input.checks.status === "pending") reasons.push("ci_pending");
-  if (input.reviewDecision === "changes_requested")
+  if (
+    input.reviewDecision === "changes_requested" &&
+    input.roles.includes("author")
+  )
     reasons.push("changes_requested");
   if (input.roles.includes("review_requested"))
     reasons.push("review_requested");
-  if (input.mergeable === "conflicting") reasons.push("merge_conflict");
+  if (input.mergeable === "conflicting" && input.roles.includes("author"))
+    reasons.push("merge_conflict");
   if (
     input.roles.includes("assignee") &&
     input.latestActivity &&
@@ -95,6 +100,13 @@ export function classifyWorkItem(input: ClassificationInput): Classification {
   if (actionReasons.length > 0)
     return { state: "needs_action", reasonCodes: [...new Set(reasons)] };
 
+  if (input.warnings.length > 0) {
+    return {
+      state: "unknown",
+      reasonCodes: [...new Set(reasons)],
+    };
+  }
+
   if (input.latestActivity?.byUser) {
     return {
       state: "waiting_upstream",
@@ -103,11 +115,7 @@ export function classifyWorkItem(input: ClassificationInput): Classification {
   }
 
   return {
-    state:
-      input.warnings.length > 0 && !input.latestActivity ? "unknown" : "active",
-    reasonCodes:
-      input.warnings.length > 0 && !input.latestActivity
-        ? ["data_incomplete"]
-        : ["open_unowned", ...new Set(reasons)],
+    state: "active",
+    reasonCodes: ["open_unowned", ...new Set(reasons)],
   };
 }

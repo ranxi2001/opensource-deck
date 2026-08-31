@@ -43,6 +43,8 @@ const GOOD_FIRST_ISSUE_LABELS = new Set([
 ]);
 const HELP_WANTED_LABELS = new Set(["help wanted", "help-wanted"]);
 const NEEDS_TRIAGE_LABELS = new Set(["needs triage", "needs-triage"]);
+const PUBLIC_LOOKUP_ENRICHMENT_LIMIT = 5;
+const PUBLIC_REFRESH_ENRICHMENT_LIMIT = 10;
 
 function toRecentIssue(item: SearchIssue): RecentIssue {
   const labels = item.labels.map(labelName).filter(Boolean);
@@ -80,14 +82,20 @@ async function recentIssuesForRepository(
   repository: string,
   since: string,
 ): Promise<RecentIssue[]> {
-  const response = await client.get<SearchResponse>("/search/issues", {
-    q: `repo:${repository} is:issue is:open updated:>=${since}`,
-    per_page: 12,
-    page: 1,
-    sort: "updated",
-    order: "desc",
-  });
-  return response.items.filter((item) => !item.pull_request).map(toRecentIssue);
+  const response = await client.get<SearchIssue[]>(
+    `/repos/${repository}/issues`,
+    {
+      state: "open",
+      since: `${since}T00:00:00Z`,
+      per_page: 100,
+      sort: "updated",
+      direction: "desc",
+    },
+  );
+  return response
+    .filter((item) => !item.pull_request)
+    .slice(0, 12)
+    .map(toRecentIssue);
 }
 
 interface SearchResponse {
@@ -115,6 +123,9 @@ interface UserResponse {
 }
 
 interface PullResponse {
+  state: "open" | "closed";
+  updated_at: string;
+  closed_at: string | null;
   merged_at: string | null;
   draft: boolean;
   mergeable: boolean | null;
@@ -146,10 +157,7 @@ interface CommentResponse {
   updated_at: string;
 }
 
-interface DiscoveredItem extends Omit<WorkItem, "state" | "reasonCodes"> {
-  state?: never;
-  reasonCodes?: never;
-}
+type DiscoveredItem = Omit<WorkItem, "state" | "reasonCodes">;
 
 interface DiscoveryQuery {
   query: string;
@@ -339,14 +347,43 @@ function reviewDecision(
   return "none";
 }
 
+const REFRESHED_SOURCE_FACTS = new Set([
+  "Review requested",
+  "Current head checks passed",
+  "Current head has a failing check",
+  "Current head has checks in progress",
+  "Pull request merged",
+]);
+
+function currentSourceFacts(
+  item: DiscoveredItem,
+  checks: ChecksSummary,
+  sourceState: WorkItem["sourceState"],
+  reviewRequested: boolean,
+): string[] {
+  const facts = item.sourceFacts.filter(
+    (fact) => !REFRESHED_SOURCE_FACTS.has(fact),
+  );
+  if (reviewRequested) facts.push("Review requested");
+  if (sourceState === "merged") facts.push("Pull request merged");
+  if (checks.status === "success") facts.push("Current head checks passed");
+  if (checks.status === "failure")
+    facts.push("Current head has a failing check");
+  if (checks.status === "pending")
+    facts.push("Current head has checks in progress");
+  if (facts.length === 0) facts.push("Recent involvement");
+  return [...new Set(facts)];
+}
+
 async function searchAll(
   client: GitHubClient,
   query: DiscoveryQuery,
   warnings: string[],
   user: string,
+  maximumPages = 10,
 ): Promise<DiscoveredItem[]> {
   const results: SearchIssue[] = [];
-  for (let page = 1; page <= 10; page += 1) {
+  for (let page = 1; page <= maximumPages; page += 1) {
     const response = await client.get<SearchResponse>("/search/issues", {
       q: query.query,
       per_page: 100,
@@ -358,7 +395,7 @@ async function searchAll(
     if (response.incomplete_results)
       warnings.push(`角色 ${query.role} 的搜索结果不完整。`);
     if (response.items.length < 100) break;
-    if (page === 10 && response.total_count > results.length) {
+    if (page === maximumPages && response.total_count > results.length) {
       warnings.push(
         `角色 ${query.role} 的搜索已达到结果上限，较早项目可能被省略。`,
       );
@@ -373,12 +410,14 @@ async function repositoryMetadata(
   client: GitHubClient,
   repository: string,
   configuredUser: string,
+  discoverFork = true,
 ): Promise<{ metadata: RepositoryMetadata; isPublic: boolean }> {
   const response = await client.get<RepositoryResponse>(`/repos/${repository}`);
   const isPublic =
     !response.private && (response.visibility ?? "public") === "public";
   let forkUrl: string | undefined;
   if (
+    discoverFork &&
     isPublic &&
     response.owner.login.toLocaleLowerCase() !==
       configuredUser.toLocaleLowerCase()
@@ -423,6 +462,7 @@ async function enrichItem(
   const activities: Activity[] = item.latestActivity
     ? [item.latestActivity]
     : [];
+  let activityComplete = true;
   try {
     const comments = await client.get<CommentResponse[]>(
       `/repos/${item.repository}/issues/${item.number}/comments`,
@@ -440,13 +480,18 @@ async function enrichItem(
       });
     }
   } catch (error) {
+    activityComplete = false;
     warnings.push(
       `评论不可用：${error instanceof Error ? error.message : "未知错误"}`,
     );
   }
 
   if (item.type === "issue")
-    return { ...item, latestActivity: newestActivity(activities), warnings };
+    return {
+      ...item,
+      latestActivity: activityComplete ? newestActivity(activities) : null,
+      warnings,
+    };
 
   try {
     const pull = await client.get<PullResponse>(
@@ -464,7 +509,7 @@ async function enrichItem(
           warnings.push(
             `检查状态不可用：${error instanceof Error ? error.message : "未知错误"}`,
           );
-          return { total_count: 0, check_runs: [] } satisfies CheckRunsResponse;
+          return null;
         }),
       client
         .get<ReviewResponse[]>(
@@ -477,10 +522,10 @@ async function enrichItem(
           warnings.push(
             `审阅数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
           );
-          return [];
+          return null;
         }),
     ]);
-    for (const review of reviews) {
+    for (const review of reviews ?? []) {
       const actor = review.user?.login;
       if (!actor || !review.submitted_at) continue;
       activities.push({
@@ -494,19 +539,23 @@ async function enrichItem(
     const requestedReviewers = pull.requested_reviewers.map(
       (reviewer) => reviewer.login,
     );
-    const roles = [...item.roles];
-    if (
-      requestedReviewers.some(
-        (reviewer) =>
-          reviewer.toLocaleLowerCase() === configuredUser.toLocaleLowerCase(),
-      ) &&
-      !roles.includes("review_requested")
-    ) {
-      roles.push("review_requested");
-    }
+    const reviewRequested = requestedReviewers.some(
+      (reviewer) =>
+        reviewer.toLocaleLowerCase() === configuredUser.toLocaleLowerCase(),
+    );
+    const roles: Role[] = item.roles.filter(
+      (role) => role !== "review_requested",
+    );
+    if (reviewRequested) roles.push("review_requested");
+    if (roles.length === 0) roles.push("involved");
+    const sourceState = pull.merged_at ? "merged" : pull.state;
+    const checkSummary =
+      checks === null ? item.checks : summarizeChecks(checks);
     return {
       ...item,
-      sourceState: pull.merged_at ? "merged" : item.sourceState,
+      sourceState,
+      updatedAt: pull.updated_at,
+      closedAt: pull.closed_at,
       draft: pull.draft,
       mergeable:
         pull.mergeable === true
@@ -514,22 +563,80 @@ async function enrichItem(
           : pull.mergeable === false && pull.mergeable_state === "dirty"
             ? "conflicting"
             : "unknown",
-      reviewDecision: reviewDecision(
-        reviews,
-        requestedReviewers,
-        configuredUser,
-      ),
-      checks: summarizeChecks(checks),
+      reviewDecision:
+        reviews === null
+          ? requestedReviewers.some(
+              (reviewer) =>
+                reviewer.toLocaleLowerCase() ===
+                configuredUser.toLocaleLowerCase(),
+            )
+            ? "review_required"
+            : item.reviewDecision
+          : reviewDecision(reviews, requestedReviewers, configuredUser),
+      checks: checkSummary,
       roles,
-      latestActivity: newestActivity(activities),
+      latestActivity: activityComplete ? newestActivity(activities) : null,
+      sourceFacts: currentSourceFacts(
+        item,
+        checkSummary,
+        sourceState,
+        reviewRequested,
+      ),
       warnings,
     };
   } catch (error) {
     warnings.push(
       `Pull Request 数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
     );
-    return { ...item, latestActivity: newestActivity(activities), warnings };
+    return {
+      ...item,
+      latestActivity: activityComplete ? newestActivity(activities) : null,
+      warnings,
+    };
   }
+}
+
+function isPriorityPublicPull(item: DiscoveredItem): boolean {
+  return (
+    item.sourceState === "open" &&
+    item.type === "pull_request" &&
+    item.roles.some((role) =>
+      ["author", "review_requested", "reviewed"].includes(role),
+    )
+  );
+}
+
+function selectPriorityPublicPulls(
+  items: DiscoveredItem[],
+  limit: number,
+): DiscoveredItem[] {
+  return items
+    .filter(isPriorityPublicPull)
+    .sort(
+      (left, right) =>
+        new Date(right.updatedAt).valueOf() -
+        new Date(left.updatedAt).valueOf(),
+    )
+    .slice(0, limit);
+}
+
+function withoutPublicEnrichment(item: DiscoveredItem): DiscoveredItem {
+  if (item.sourceState !== "open") return item;
+  return {
+    ...item,
+    latestActivity: null,
+    warnings: [...item.warnings, "匿名查询未补充该事项的完整活动时间线。"],
+  };
+}
+
+function manualOverrideFromItem(
+  item: WorkItem,
+): NonNullable<Parameters<typeof classifyWorkItem>[0]["override"]> | undefined {
+  if (item.reasonCodes.includes("manual_snooze")) return { state: "snoozed" };
+  if (item.reasonCodes.includes("manual_waiting"))
+    return { state: "waiting_upstream" };
+  if (item.reasonCodes.includes("manual_active")) return { state: "active" };
+  return undefined;
 }
 
 export interface CollectDashboardOptions {
@@ -545,6 +652,7 @@ export async function collectDashboard(
   options: CollectDashboardOptions,
 ): Promise<DashboardData> {
   const { client, config } = options;
+  const browserLimited = options.collectionMode === "public_browser";
   const now = options.now ?? new Date();
   const since = new Date(now.valueOf() - config.lookbackDays * 86_400_000)
     .toISOString()
@@ -587,12 +695,11 @@ export async function collectDashboard(
   const discovered = mergeDiscovered(
     (
       await mapLimit(queries, 3, (query) =>
-        searchAll(client, query, warnings, user),
+        searchAll(client, query, warnings, user, browserLimited ? 1 : 10),
       )
     ).flat(),
   );
 
-  const browserLimited = options.collectionMode === "public_browser";
   const discoveredForMetadata = browserLimited
     ? [...discovered]
         .sort(
@@ -616,7 +723,12 @@ export async function collectDashboard(
     options.concurrency ?? 6,
     async (repository) => {
       try {
-        return await repositoryMetadata(client, repository, user);
+        return await repositoryMetadata(
+          client,
+          repository,
+          user,
+          !browserLimited,
+        );
       } catch (error) {
         warnings.push(
           `仓库 ${repository} 的元数据不可用：${error instanceof Error ? error.message : "未知错误"}`,
@@ -651,14 +763,31 @@ export async function collectDashboard(
 
   if (browserLimited) {
     warnings.push(
-      "公开账户查询最多处理 20 个近期活跃仓库，其中前 8 个仓库用于发现候选 Issue；同时省略逐项 CI、审阅和评论补充数据。",
+      `公开账户查询最多处理 20 个近期活跃仓库，其中前 8 个仓库用于发现候选 Issue；最近更新的 ${PUBLIC_LOOKUP_ENRICHMENT_LIMIT} 个作者或 Reviewer 开放 PR 会补充 CI、审阅和评论数据，其余事项将明确标记为数据不完整。`,
     );
   }
-  const enriched = browserLimited
-    ? safeItems
-    : await mapLimit(safeItems, options.concurrency ?? 6, (item) =>
-        enrichItem(client, item, user),
-      );
+  let enriched: DiscoveredItem[];
+  if (browserLimited) {
+    const priorityItems = selectPriorityPublicPulls(
+      safeItems,
+      PUBLIC_LOOKUP_ENRICHMENT_LIMIT,
+    );
+    const priorityResults = await mapLimit(
+      priorityItems,
+      options.concurrency ?? 4,
+      (item) => enrichItem(client, item, user),
+    );
+    const enrichedById = new Map(
+      priorityResults.map((item) => [item.id, item]),
+    );
+    enriched = safeItems.map(
+      (item) => enrichedById.get(item.id) ?? withoutPublicEnrichment(item),
+    );
+  } else {
+    enriched = await mapLimit(safeItems, options.concurrency ?? 6, (item) =>
+      enrichItem(client, item, user),
+    );
+  }
   const classified: WorkItem[] = enriched.map((item) => {
     const classification = classifyWorkItem({
       ...item,
@@ -737,4 +866,122 @@ export async function collectDashboard(
     warnings: [...new Set(warnings)],
   };
   return dashboardDataSchema.parse(result);
+}
+
+export interface RefreshPublicDashboardOptions {
+  client: GitHubClient;
+  dashboard: DashboardData;
+  now?: Date;
+  concurrency?: number;
+  enrichmentLimit?: number;
+}
+
+export async function refreshPublicDashboard(
+  options: RefreshPublicDashboardOptions,
+): Promise<DashboardData> {
+  const { client, dashboard } = options;
+  if (dashboard.accessMode !== "public") {
+    throw new Error("公开刷新只能用于公开仪表盘数据。");
+  }
+
+  const now = options.now ?? new Date();
+  const limit = options.enrichmentLimit ?? PUBLIC_REFRESH_ENRICHMENT_LIMIT;
+  const warnings: string[] = [];
+  let currentUpdates = new Map<string, string>();
+  try {
+    const response = await client.get<SearchResponse>("/search/issues", {
+      q: `involves:${dashboard.sourceUser.login} is:pr is:open`,
+      per_page: 100,
+      page: 1,
+      sort: "updated",
+      order: "desc",
+    });
+    currentUpdates = new Map(
+      response.items.map((item) => [
+        item.node_id || String(item.id),
+        item.updated_at,
+      ]),
+    );
+    if (
+      response.incomplete_results ||
+      response.total_count > response.items.length
+    ) {
+      warnings.push(
+        "重点 Pull Request 排序结果不完整，未列出的项目按上次同步时间排序。",
+      );
+    }
+  } catch (error) {
+    warnings.push(
+      `重点 Pull Request 排序不可用：${error instanceof Error ? error.message : "未知错误"}`,
+    );
+  }
+  const priorityCandidates = dashboard.items
+    .filter(isPriorityPublicPull)
+    .map((item) => ({
+      ...item,
+      updatedAt: currentUpdates.get(item.id) ?? item.updatedAt,
+    }));
+  const priorityItems = selectPriorityPublicPulls(priorityCandidates, limit);
+  warnings.unshift(
+    `本次公开刷新更新了 ${priorityItems.length} 个作者或 Reviewer 开放 PR；项目发现、普通 Issue 和候选 Issue 保留上次 Pages 同步数据。`,
+  );
+  const refreshed = await mapLimit(
+    priorityItems.map((item) => ({ ...item, warnings: [] })),
+    options.concurrency ?? 4,
+    (item) => enrichItem(client, item, dashboard.sourceUser.login),
+  );
+  const refreshedById = new Map(refreshed.map((item) => [item.id, item]));
+  const items = mergeWorkItems(
+    dashboard.items.map((item) => {
+      const current = refreshedById.get(item.id);
+      if (!current) return item;
+      const classification = classifyWorkItem({
+        ...current,
+        override: manualOverrideFromItem(item),
+        now,
+      });
+      return { ...current, ...classification };
+    }),
+  );
+
+  const metadata = new Map<string, RepositoryMetadata>(
+    dashboard.projects.map((project) => [
+      project.repository,
+      {
+        repository: project.repository,
+        visibility: project.visibility,
+        description: project.description,
+        url: project.url,
+        avatarUrl: project.avatarUrl,
+        forkUrl: project.forkUrl,
+      },
+    ]),
+  );
+  const projectConfig = Object.fromEntries(
+    dashboard.projects.map((project) => [
+      project.repository,
+      {
+        pinned: project.pinned,
+        alias: project.alias,
+        nextAction: project.nextAction,
+        hidden: false,
+      },
+    ]),
+  );
+  warnings.push(...refreshed.flatMap((item) => item.warnings));
+  if (priorityCandidates.length > priorityItems.length) {
+    warnings.push(
+      `本次公开刷新优先更新了最近 ${priorityItems.length} 个作者或 Reviewer 开放 PR；其余重点 PR 保留上次同步数据。`,
+    );
+  }
+
+  return dashboardDataSchema.parse({
+    ...dashboard,
+    generatedAt: now.toISOString(),
+    projects: buildProjects(items, metadata, projectConfig),
+    items,
+    syncStatus: warnings.length > 0 ? "partial" : "success",
+    rateLimit: client.getRateLimit(),
+    warnings: [...new Set(warnings)],
+  });
 }

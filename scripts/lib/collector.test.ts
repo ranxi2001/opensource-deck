@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectDashboard } from "./collector";
+import { collectDashboard, refreshPublicDashboard } from "./collector";
 import { GitHubClient } from "./github";
 import type { DeckConfig } from "../../src/domain/schema";
 
@@ -27,54 +27,92 @@ function fetcher(privateRepository: boolean): typeof fetch {
     const url = new URL(String(input));
     if (url.pathname === "/search/issues") {
       const query = url.searchParams.get("q") ?? "";
-      const recent = query.startsWith("repo:acme/demo is:issue");
       const include =
         query.startsWith("author:octocat is:pr") ||
         query.startsWith("involves:octocat");
       return response({
-        total_count: include || recent ? 1 : 0,
+        total_count: include ? 1 : 0,
         incomplete_results: false,
-        items: recent
+        items: include
           ? [
               {
-                id: 12,
-                node_id: "I_node_12",
-                html_url: "https://github.com/acme/demo/issues/12",
+                id: 7,
+                node_id: "PR_node_7",
+                html_url: "https://github.com/acme/demo/pull/7",
                 repository_url: "https://api.github.com/repos/acme/demo",
-                number: 12,
-                title: "Add a contributor-friendly example",
-                user: { login: "reader" },
+                number: 7,
+                title: "Keep public state explainable",
+                user: { login: "octocat" },
                 state: "open",
-                created_at: "2026-08-29T00:00:00.000Z",
-                updated_at: "2026-08-30T00:00:00.000Z",
+                created_at: "2026-08-28T00:00:00.000Z",
+                updated_at: "2026-08-29T00:00:00.000Z",
                 closed_at: null,
-                labels: [{ name: "good first issue" }],
+                labels: [{ name: "dashboard" }],
                 assignees: [],
-                comments: 2,
+                pull_request: { merged_at: null },
+                draft: false,
               },
             ]
-          : include
-            ? [
-                {
-                  id: 7,
-                  node_id: "PR_node_7",
-                  html_url: "https://github.com/acme/demo/pull/7",
-                  repository_url: "https://api.github.com/repos/acme/demo",
-                  number: 7,
-                  title: "Keep public state explainable",
-                  user: { login: "octocat" },
-                  state: "open",
-                  created_at: "2026-08-28T00:00:00.000Z",
-                  updated_at: "2026-08-29T00:00:00.000Z",
-                  closed_at: null,
-                  labels: [{ name: "dashboard" }],
-                  assignees: [],
-                  pull_request: { merged_at: null },
-                  draft: false,
-                },
-              ]
-            : [],
+          : [],
       });
+    }
+    if (url.pathname === "/repos/acme/demo/issues") {
+      return response([
+        {
+          id: 12,
+          node_id: "I_node_12",
+          html_url: "https://github.com/acme/demo/issues/12",
+          repository_url: "https://api.github.com/repos/acme/demo",
+          number: 12,
+          title: "Add a contributor-friendly example",
+          user: { login: "reader" },
+          state: "open",
+          created_at: "2026-08-29T00:00:00.000Z",
+          updated_at: "2026-08-30T00:00:00.000Z",
+          closed_at: null,
+          labels: [{ name: "good first issue" }],
+          assignees: [],
+          comments: 2,
+        },
+      ]);
+    }
+    if (url.pathname === "/repos/acme/demo/issues/7/comments") {
+      return response([
+        {
+          user: { login: "octocat" },
+          created_at: "2026-08-30T01:00:00.000Z",
+          updated_at: "2026-08-30T01:00:00.000Z",
+        },
+      ]);
+    }
+    if (url.pathname === "/repos/acme/demo/pulls/7") {
+      return response({
+        state: "open",
+        updated_at: "2026-08-30T02:00:00.000Z",
+        closed_at: null,
+        merged_at: null,
+        draft: false,
+        mergeable: true,
+        mergeable_state: "clean",
+        requested_reviewers: [],
+        head: { sha: "current-head" },
+      });
+    }
+    if (url.pathname === "/repos/acme/demo/commits/current-head/check-runs") {
+      return response({
+        total_count: 1,
+        check_runs: [
+          {
+            name: "test",
+            status: "completed",
+            conclusion: "failure",
+            html_url: "https://github.com/acme/demo/actions/runs/1",
+          },
+        ],
+      });
+    }
+    if (url.pathname === "/repos/acme/demo/pulls/7/reviews") {
+      return response([]);
     }
     if (url.pathname === "/repos/acme/demo") {
       return response({
@@ -102,7 +140,7 @@ function fetcher(privateRepository: boolean): typeof fetch {
 }
 
 describe("collectDashboard", () => {
-  it("deduplicates role queries and emits the public lookup limitation", async () => {
+  it("enriches priority public pull requests while keeping lookup bounded", async () => {
     const dashboard = await collectDashboard({
       client: new GitHubClient({ fetcher: fetcher(false) }),
       config,
@@ -114,11 +152,48 @@ describe("collectDashboard", () => {
       expect.arrayContaining(["author", "involved"]),
     );
     expect(dashboard.projects[0]?.visibility).toBe("public");
+    expect(dashboard.items[0]?.checks.status).toBe("failure");
+    expect(dashboard.items[0]?.state).toBe("needs_action");
     expect(dashboard.recentIssues).toHaveLength(1);
     expect(dashboard.recentIssues[0]?.signals).toEqual(
       expect.arrayContaining(["unassigned", "good_first_issue"]),
     );
     expect(dashboard.warnings.join(" ")).toContain("20 个近期活跃仓库");
+    expect(dashboard.warnings.join(" ")).toContain("作者或 Reviewer");
+  });
+
+  it("refreshes current-head CI without replacing the snapshot", async () => {
+    const initial = await collectDashboard({
+      client: new GitHubClient({ fetcher: fetcher(false) }),
+      config,
+      now: new Date("2026-08-30T00:00:00.000Z"),
+      collectionMode: "public_browser",
+    });
+    const requests: string[] = [];
+    const trackingFetcher = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      requests.push(url.pathname);
+      return fetcher(false)(input);
+    }) as typeof fetch;
+    const refreshed = await refreshPublicDashboard({
+      client: new GitHubClient({ fetcher: trackingFetcher }),
+      dashboard: initial,
+      now: new Date("2026-08-30T03:00:00.000Z"),
+    });
+
+    expect(requests).toContain(
+      "/repos/acme/demo/commits/current-head/check-runs",
+    );
+    expect(requests.filter((path) => path === "/search/issues")).toHaveLength(
+      1,
+    );
+    expect(refreshed.items[0]?.checks.status).toBe("failure");
+    expect(refreshed.recentIssues).toEqual(initial.recentIssues);
+    expect(refreshed.syncStatus).toBe("partial");
+    expect(refreshed.warnings[0]).toContain(
+      "候选 Issue 保留上次 Pages 同步数据",
+    );
+    expect(refreshed.generatedAt).toBe("2026-08-30T03:00:00.000Z");
   });
 
   it("drops private repositories unless authenticated mode explicitly allows them", async () => {

@@ -46,6 +46,27 @@ describe("classifyWorkItem", () => {
     );
   });
 
+  it("does not assign an upstream pull request's CI failure to a reviewer", () => {
+    const result = classifyWorkItem({
+      ...base,
+      roles: ["reviewed"],
+      reviewDecision: "changes_requested",
+      mergeable: "conflicting",
+      checks: {
+        status: "failure",
+        total: 1,
+        success: 0,
+        failure: 1,
+        pending: 0,
+        jobs: [],
+      },
+    });
+    expect(result).toEqual({
+      state: "active",
+      reasonCodes: ["open_unowned"],
+    });
+  });
+
   it("keeps source facts visible under a manual snooze", () => {
     const result = classifyWorkItem({
       ...base,
@@ -83,7 +104,16 @@ describe("classifyWorkItem", () => {
 
   it("does not turn missing enrichment into success", () => {
     expect(
-      classifyWorkItem({ ...base, warnings: ["checks unavailable"] }),
+      classifyWorkItem({
+        ...base,
+        latestActivity: {
+          actor: "octocat",
+          at: "2026-08-29T12:00:00.000Z",
+          kind: "commented",
+          byUser: true,
+        },
+        warnings: ["checks unavailable"],
+      }),
     ).toEqual({
       state: "unknown",
       reasonCodes: ["data_incomplete"],

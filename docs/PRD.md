@@ -136,8 +136,9 @@ repeated action rather than marketing presentation.
 - Deployed snapshot: an hourly Action generates the configured owner's fully
   enriched public workspace.
 - Public username: the browser accepts any GitHub username and performs a
-  bounded anonymous lookup over at most 20 recently active repositories,
-  without per-item CI, review, or comment enrichment.
+  bounded anonymous lookup over at most 20 recently active repositories. It
+  enriches up to 5 recent open pull requests where the user is an author or
+  reviewer with current-head CI, reviews, comments, and merge state.
 - Private repositories: an optional OAuth relay performs server-side code
   exchange, keeps the GitHub token in an encrypted HttpOnly cookie, and returns
   private data at runtime without writing it to Pages.
@@ -493,15 +494,19 @@ OAuth and session secrets are not available to the Pages workflow.
 
 - Scheduled refresh defaults to once per hour.
 - Manual `workflow_dispatch` is available.
-- In the browser, refreshing a deployed snapshot performs a bounded anonymous
-  GitHub lookup for the displayed user. It updates public item source state and
-  timestamps without waiting for Pages, while clearly reporting omitted CI,
-  review, and comment enrichment.
+- In the browser, refreshing a deployed snapshot preserves the snapshot and
+  candidate issues, then performs bounded anonymous enrichment for up to 10
+  recent open pull requests where the displayed user is an author or reviewer.
+  It updates current-head CI, reviews, comments, merge state, and action
+  classification without waiting for Pages.
+- Public refresh failures retain the last known CI and review data. Missing
+  activity timelines remain unknown and must not be classified as Waiting
+  upstream.
 - The UI shows `generatedAt` and considers data stale after two expected
   intervals.
 - Schedule delay is expected; the product does not claim real-time state.
 - Conditional requests, pagination, query partitioning, and bounded enrichment
-  keep API use within the authenticated rate limit.
+  keep API use within the applicable GitHub rate limit.
 
 ## 14. Security And Privacy Requirements
 
