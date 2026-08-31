@@ -7,7 +7,7 @@
 | Status            | Public deployment validated; private relay deployment pending |
 | Product           | OpenSourceDeck                                                |
 | Owner             | `ranxi2001`                                                   |
-| Last updated      | 2026-08-30                                                    |
+| Last updated      | 2026-08-31                                                    |
 | Target release    | `v0.1.0`                                                      |
 | Deployment target | GitHub Pages with optional OAuth relay                        |
 
@@ -363,6 +363,12 @@ All values are public. The documentation must warn users not to store private
 notes, customer names, embargoed work, credentials, or security findings in
 this file.
 
+For Pages deployment, the workflow defaults `github_user` to the current
+repository owner and derives the Vite base path from the current repository
+name. This runtime override lets a personal fork deploy without tracked-file
+changes. An organization-owned fork may select a personal account through the
+repository Actions variable `OSDECK_GITHUB_USER`.
+
 Configuration is schema-validated. Unknown fields produce a visible warning;
 invalid security-sensitive values fail the sync rather than being ignored.
 
@@ -577,8 +583,9 @@ read-only contribution workspace.
 
 v0.1 is successful when:
 
-1. A user can fork or clone the project, set one GitHub username, enable Pages,
-   and receive a useful dashboard without listing repositories.
+1. A user can fork the project, enable Actions and Pages, and receive a useful
+   dashboard for the fork owner without changing tracked files or listing
+   repositories.
 2. A visitor can enter another valid GitHub username and receive a bounded
    public workspace without creating an account.
 3. A configured deployment can authenticate with GitHub and inspect permitted
@@ -656,7 +663,7 @@ and issues may be observed through GitHub without adding client telemetry.
 
 ### Milestone 4: Public Beta
 
-- [x] Fork-and-configure documentation.
+- [x] Zero-edit personal fork deployment and documentation.
 - [x] Source-distributed CLI and Agent Skill.
 - Browser matrix and 500-item performance validation.
 - Security review and dependency audit.

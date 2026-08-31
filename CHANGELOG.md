@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Simplified Chinese is now the default README, with the English README kept as
+  a linked alternative.
+- Personal forks now derive the dashboard user and Pages base path from the
+  repository context, so deployment requires no tracked-file changes.
+
 ## [0.1.0] - 2026-08-30
 
 OpenSourceDeck's first public release provides a read-only workspace for

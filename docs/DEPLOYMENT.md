@@ -5,17 +5,26 @@
 The canonical public deployment is
 [https://onefly.top/opensource-deck/](https://onefly.top/opensource-deck/).
 
-1. Fork or clone the repository.
-2. Set `github_user` in `deck.config.yml`.
-3. In repository settings, select GitHub Actions as the Pages source.
-4. Push `main` or run `Sync and deploy Pages` manually.
+The recommended personal setup does not require any project-file changes. The
+workflow uses the fork owner as the dashboard user and derives the Pages base
+path from the repository name:
+
+1. Fork the repository.
+2. Enable the fork's workflows from the **Actions** tab if GitHub asks you to
+   do so.
+3. In **Settings → Pages**, select **GitHub Actions** as the source.
+4. Run `Sync and deploy Pages` from the **Actions** tab for the first deployment.
+5. Open `https://<your-user>.github.io/<repository-name>/`, or
+   `https://<your-user>.github.io/` when the repository itself is named
+   `<your-user>.github.io`.
 
 The workflow collects public data with the repository-scoped `GITHUB_TOKEN`,
 runs validation, and uploads `dist/` as a Pages artifact. Generated account data
 is not committed.
 
-For a project-site fork with a different repository name, update
-`VITE_BASE_PATH` in `.github/workflows/pages.yml`.
+For a fork owned by an organization, set the repository Actions variable
+`OSDECK_GITHUB_USER` to the personal GitHub username the dashboard should show.
+This setting is optional for personal forks and does not modify tracked files.
 
 The Pages site also supports anonymous public username lookup. Anonymous mode
 has lower API limits and intentionally omits detailed enrichment.

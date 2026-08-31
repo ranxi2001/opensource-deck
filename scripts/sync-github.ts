@@ -2,6 +2,7 @@
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { deckConfigFileSchema } from "../src/domain/schema";
 import { collectDashboard } from "./lib/collector";
 import { loadDeckConfig } from "./lib/config";
 import { GitHubClient } from "./lib/github";
@@ -27,7 +28,13 @@ if (!token && process.env.CI) {
   throw new Error("GITHUB_TOKEN is required in CI");
 }
 
-const config = await loadDeckConfig(configPath);
+const fileConfig = await loadDeckConfig(configPath);
+const config = {
+  ...fileConfig,
+  githubUser: deckConfigFileSchema.shape.github_user.parse(
+    option("--user", fileConfig.githubUser),
+  ),
+};
 const client = new GitHubClient({ token });
 const dashboard = await collectDashboard({ client, config });
 
