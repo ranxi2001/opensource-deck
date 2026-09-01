@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-01
+
 ### Added
 
 - Simplified Chinese is now the default README, with the English README kept as
@@ -11,6 +13,8 @@
 - Browser refresh now preserves the deployed snapshot while updating
   current-head CI, review, comment, and merge state for priority authored or
   reviewed pull requests.
+- Work items now use distinct, accessible decorators for item type, personal
+  role, review decision, mergeability, and action state on desktop and mobile.
 
 ## [0.1.0] - 2026-08-30
 
@@ -40,4 +44,6 @@ tracking open-source contribution work across GitHub repositories.
 - Private GitHub tokens stay in the relay's encrypted HttpOnly cookie and are
   never returned to browser JavaScript or written to Pages artifacts.
 
+[Unreleased]: https://github.com/ranxi2001/opensource-deck/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ranxi2001/opensource-deck/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ranxi2001/opensource-deck/releases/tag/v0.1.0

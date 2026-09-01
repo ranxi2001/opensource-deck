@@ -1,16 +1,21 @@
 import {
   AlertCircle,
   CheckCircle2,
-  CircleDot,
   Clock3,
   ExternalLink,
-  GitPullRequest,
   LoaderCircle,
   MessageSquareText,
 } from "lucide-react";
-import { REASON_LABELS, ROLE_LABELS, STATE_LABELS } from "../domain/labels";
+import { REASON_LABELS, STATE_LABELS } from "../domain/labels";
 import type { WorkItem } from "../domain/schema";
 import { relativeTime } from "../domain/time";
+import {
+  MergeDecorator,
+  ReviewDecorator,
+  RoleDecorator,
+  StateDecorator,
+  TypeDecorator,
+} from "./WorkDecorators";
 
 interface WorkTableProps {
   items: WorkItem[];
@@ -60,7 +65,7 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
       <div className="work-header" role="row">
         <span role="columnheader">贡献项目</span>
         <span role="columnheader">你的角色</span>
-        <span role="columnheader">状态信号</span>
+        <span role="columnheader">状态与合并</span>
         <span role="columnheader">更新时间</span>
         <span role="columnheader" className="sr-only">
           打开
@@ -79,16 +84,7 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
                 type="button"
                 onClick={() => onSelect(item)}
               >
-                <span
-                  className={`type-icon type-${item.type}`}
-                  aria-hidden="true"
-                >
-                  {item.type === "pull_request" ? (
-                    <GitPullRequest size={17} />
-                  ) : (
-                    <CircleDot size={17} />
-                  )}
-                </span>
+                <TypeDecorator type={item.type} />
                 <span className="work-copy">
                   <span className="work-repo">
                     {item.repository}
@@ -96,6 +92,15 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
                     {item.draft && <span className="draft-label">草稿</span>}
                   </span>
                   <strong>{item.title}</strong>
+                  <span className="mobile-decorators">
+                    {item.roles[0] && <RoleDecorator role={item.roles[0]} />}
+                    {item.type === "pull_request" && (
+                      <>
+                        <ReviewDecorator decision={item.reviewDecision} />
+                        <MergeDecorator status={item.mergeable} />
+                      </>
+                    )}
+                  </span>
                   <span className="mobile-work-meta">
                     {STATE_LABELS[item.state]} / {relativeTime(item.updatedAt)}
                   </span>
@@ -104,22 +109,28 @@ export function WorkTable({ items, selectedId, onSelect }: WorkTableProps) {
             </div>
             <div className="work-roles" role="cell">
               {item.roles.slice(0, 2).map((role) => (
-                <span key={role}>{ROLE_LABELS[role]}</span>
+                <RoleDecorator key={role} role={role} />
               ))}
-              {item.roles.length > 2 && <span>+{item.roles.length - 2}</span>}
+              {item.roles.length > 2 && (
+                <span className="decorator role-overflow">
+                  +{item.roles.length - 2}
+                </span>
+              )}
             </div>
-            <div className="work-signal" role="cell">
-              <span
-                className={`state-dot state-${item.state}`}
-                aria-hidden="true"
-              />
-              <span
-                title={item.reasonCodes
-                  .map((reason) => REASON_LABELS[reason])
-                  .join("; ")}
-              >
-                {STATE_LABELS[item.state]}
-              </span>
+            <div
+              className="work-signal"
+              role="cell"
+              title={item.reasonCodes
+                .map((reason) => REASON_LABELS[reason])
+                .join("; ")}
+            >
+              <StateDecorator state={item.state} />
+              {item.type === "pull_request" && (
+                <>
+                  <ReviewDecorator decision={item.reviewDecision} />
+                  <MergeDecorator status={item.mergeable} />
+                </>
+              )}
               <Checks item={item} />
             </div>
             <div

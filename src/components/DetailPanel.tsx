@@ -1,41 +1,26 @@
 import {
   AlertTriangle,
   Check,
-  CircleDot,
   CodeXml,
   ExternalLink,
-  GitPullRequest,
   Workflow,
   X,
 } from "lucide-react";
-import {
-  REASON_LABELS,
-  ROLE_LABELS,
-  STATE_LABELS,
-  sourceFactLabel,
-} from "../domain/labels";
+import { REASON_LABELS, sourceFactLabel } from "../domain/labels";
 import type { WorkItem } from "../domain/schema";
 import { relativeTime } from "../domain/time";
+import {
+  MergeDecorator,
+  ReviewDecorator,
+  RoleDecorator,
+  StateDecorator,
+  TypeDecorator,
+} from "./WorkDecorators";
 
 interface DetailPanelProps {
   item: WorkItem | null;
   onClose: () => void;
 }
-
-const REVIEW_LABELS: Record<WorkItem["reviewDecision"], string> = {
-  approved: "已批准",
-  changes_requested: "要求修改",
-  review_required: "需要审阅",
-  none: "无",
-  unknown: "未知",
-};
-
-const MERGE_LABELS: Record<WorkItem["mergeable"], string> = {
-  mergeable: "可合并",
-  conflicting: "存在冲突",
-  unknown: "未知",
-  not_applicable: "不适用",
-};
 
 export function DetailPanel({ item, onClose }: DetailPanelProps) {
   if (!item) return null;
@@ -43,11 +28,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
     <aside className="detail-panel" aria-label="贡献详情">
       <div className="detail-header">
         <div className="detail-kicker">
-          {item.type === "pull_request" ? (
-            <GitPullRequest size={16} />
-          ) : (
-            <CircleDot size={16} />
-          )}
+          <TypeDecorator type={item.type} />
           <span>
             {item.repository} #{item.number}
           </span>
@@ -64,13 +45,7 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
       <div className="detail-scroll">
         <h2>{item.title}</h2>
         <div className="detail-state-row">
-          <span className={`state-badge state-badge-${item.state}`}>
-            <span
-              className={`state-dot state-${item.state}`}
-              aria-hidden="true"
-            />
-            {STATE_LABELS[item.state]}
-          </span>
+          <StateDecorator state={item.state} />
           <span>更新于 {relativeTime(item.updatedAt)}</span>
         </div>
 
@@ -90,19 +65,27 @@ export function DetailPanel({ item, onClose }: DetailPanelProps) {
         <section className="detail-section detail-grid">
           <div>
             <h3>你的角色</h3>
-            <div className="tag-list">
+            <div className="decorator-list">
               {item.roles.map((role) => (
-                <span key={role}>{ROLE_LABELS[role]}</span>
+                <RoleDecorator key={role} role={role} />
               ))}
             </div>
           </div>
           <div>
             <h3>审阅状态</h3>
-            <p>{REVIEW_LABELS[item.reviewDecision]}</p>
+            {item.type === "pull_request" ? (
+              <ReviewDecorator decision={item.reviewDecision} />
+            ) : (
+              <span className="detail-not-applicable">仅适用于 PR</span>
+            )}
           </div>
           <div>
             <h3>可合并状态</h3>
-            <p>{MERGE_LABELS[item.mergeable]}</p>
+            {item.type === "pull_request" ? (
+              <MergeDecorator status={item.mergeable} />
+            ) : (
+              <span className="detail-not-applicable">仅适用于 PR</span>
+            )}
           </div>
           <div>
             <h3>最近活动</h3>

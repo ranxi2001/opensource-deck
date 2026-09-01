@@ -1,4 +1,15 @@
-import type { IssueSignal, ReasonCode, Role, WorkState } from "./schema";
+import type {
+  IssueSignal,
+  ReasonCode,
+  Role,
+  WorkItem,
+  WorkState,
+} from "./schema";
+
+export const ITEM_TYPE_LABELS: Record<WorkItem["type"], string> = {
+  issue: "Issue",
+  pull_request: "Pull Request",
+};
 
 export const STATE_LABELS: Record<WorkState, string> = {
   needs_action: "需要处理",
@@ -34,6 +45,21 @@ export const ROLE_LABELS: Record<Role, string> = {
   reviewed: "已审阅",
   mentioned: "被提及",
   involved: "已参与",
+};
+
+export const REVIEW_LABELS: Record<WorkItem["reviewDecision"], string> = {
+  approved: "已批准",
+  changes_requested: "要求修改",
+  review_required: "等待审阅",
+  none: "无审阅结论",
+  unknown: "审阅状态未知",
+};
+
+export const MERGE_LABELS: Record<WorkItem["mergeable"], string> = {
+  mergeable: "可合并",
+  conflicting: "存在冲突",
+  unknown: "合并状态未知",
+  not_applicable: "不适用",
 };
 
 export const ISSUE_SIGNAL_LABELS: Record<IssueSignal, string> = {

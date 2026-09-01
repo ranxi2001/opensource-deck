@@ -9,6 +9,19 @@ test("desktop workspace supports filtering, details, and command search", async 
   await expect(
     page.getByRole("heading", { name: "我的上游贡献" }),
   ).toBeVisible();
+  const pullRequestRow = page
+    .getByRole("row")
+    .filter({ hasText: "fix: preserve anonymous OverlayBD credential mode" });
+  await expect(pullRequestRow.getByLabel("类型：Pull Request")).toBeVisible();
+  await expect(
+    pullRequestRow.locator(".work-roles").getByTitle("你的角色：作者"),
+  ).toBeVisible();
+  await expect(
+    pullRequestRow.locator(".work-signal").getByTitle("审阅状态：等待审阅"),
+  ).toBeVisible();
+  await expect(
+    pullRequestRow.locator(".work-signal").getByTitle("可合并状态：可合并"),
+  ).toBeVisible();
   await page.getByRole("tab", { name: /等待上游/ }).click();
   await expect(
     page.getByText("fix(memory): add a durable clear generation fence"),
@@ -39,6 +52,23 @@ test("mobile workspace has no page overflow and exposes project navigation", asy
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "我的上游贡献" }),
+  ).toBeVisible();
+  const pullRequestRow = page
+    .getByRole("row")
+    .filter({ hasText: "fix: preserve anonymous OverlayBD credential mode" });
+  await expect(pullRequestRow.getByLabel("类型：Pull Request")).toBeVisible();
+  await expect(
+    pullRequestRow.locator(".mobile-decorators").getByTitle("你的角色：作者"),
+  ).toBeVisible();
+  await expect(
+    pullRequestRow
+      .locator(".mobile-decorators")
+      .getByTitle("审阅状态：等待审阅"),
+  ).toBeVisible();
+  await expect(
+    pullRequestRow
+      .locator(".mobile-decorators")
+      .getByTitle("可合并状态：可合并"),
   ).toBeVisible();
   await page.getByRole("button", { name: "打开项目列表" }).click();
   const projects = page.getByRole("complementary", { name: "项目" });

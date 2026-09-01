@@ -1,7 +1,7 @@
 {
   "name": "opensource-deck",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "A personal command center for open-source contributions.",
   "license": "MIT",
