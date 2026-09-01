@@ -208,20 +208,28 @@ The secondary workspace discovers open issues updated within the last 30 days
 from repositories found through the user's recent contribution activity. It:
 
 - excludes issues already present in the user's contribution workspace;
-- retains repository, author, labels, assignees, comment count, and timestamps;
+- retains repository, author, labels, assignees, comment count, timestamps, and
+  bounded evidence of open pull requests that cross-reference the issue;
 - derives only inspectable signals: unassigned, assigned, `good first issue`,
-  `help wanted`, and `needs triage`;
-- supports repository, keyword, assignment, and contribution-label filters;
+  `help wanted`, `needs triage`, and an open linked-pull-request signal;
+- supports repository, keyword, assignment, linked-PR, and
+  contribution-label filters;
 - links directly to GitHub and never claims or mutates an issue.
 
-The UI must state that these are public screening signals. `unassigned` does
-not mean nobody is already working on an issue, and a contribution-friendly
-label does not guarantee that a proposed pull request will be accepted.
+The UI must state that these are public screening signals. `unassigned` means
+only that GitHub reports no Assignee; it does not mean nobody is already
+working on the issue. An open cross-referenced pull request is visible
+implementation activity, but neither that relationship nor a
+contribution-friendly label guarantees that a proposed pull request will be
+accepted.
 
 Full collection scans at most 20 recently active repositories and retains at
-most 160 issue candidates. Anonymous browser lookup scans the first 8
-repositories and retains at most 80 candidates to remain within GitHub's public
-API limits.
+most 160 issue candidates. It checks up to 40 recent candidates for linked PRs.
+Anonymous browser lookup scans the first 8 repositories, retains at most 80
+candidates, and checks linked PRs for the first 3 candidates to remain within
+GitHub's public API limits. Each checked Issue scans at most two Timeline API
+pages. Candidates outside the bound must report linked-PR status as not checked
+rather than as no linked PR.
 
 ## 8. State Classification Contract
 
@@ -274,7 +282,7 @@ that a maintainer has accepted responsibility or promised a response.
 | FR-020 | Keep private tokens and data out of browser JavaScript and Pages artifacts            | Must     |
 | FR-021 | Use Simplified Chinese as the default interface language                              | Must     |
 | FR-022 | Discover open issues updated within 30 days in recently active repositories           | Must     |
-| FR-023 | Filter issue candidates by repository, keyword, assignment, and public labels         | Must     |
+| FR-023 | Filter issue candidates by repository, keyword, assignment, linked PR, and labels     | Must     |
 | FR-024 | Explain that issue-candidate signals do not establish ownership or acceptance         | Must     |
 | FR-025 | Expose summary, project, work, candidate, lookup, URL, and public-sync CLI commands   | Must     |
 | FR-026 | Provide stable JSON envelopes with source, totals, and returned counts for agents     | Must     |
@@ -433,7 +441,14 @@ labels[]
 assignees[]
 comments
 signals[]
+linkedPullRequests[]
+linkedPullRequestStatus
 ```
+
+Each linked pull request retains only its public repository coordinate, number,
+URL, title, author, and draft flag. `linkedPullRequestStatus` distinguishes a
+complete check, a capped partial check, a bounded not-checked candidate, and an
+unavailable GitHub response.
 
 The schema is versioned independently from the application release. Readers
 reject unsupported major schema versions and tolerate additive minor fields.
@@ -636,6 +651,8 @@ and issues may be observed through GitHub without adding client telemetry.
       candidates, exact lookup, URL output, and public sync.
 - [x] The companion Agent Skill treats candidate signals as screening evidence
       and preserves authorization for external GitHub mutations.
+- [x] Recent Issue candidates distinguish no Assignee from bounded evidence of
+      open linked PR activity and expose unknown relationship checks.
 
 ## 19. Delivery Plan
 

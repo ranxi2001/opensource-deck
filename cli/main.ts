@@ -251,7 +251,7 @@ function humanSummary(data: DashboardData): string {
     `同步于 ${new Date(summary.generatedAt).toLocaleString("zh-CN")}（${relativeTime(summary.generatedAt)}）`,
     `项目 ${summary.projects}  |  贡献 ${summary.items}  |  近期 Issue ${summary.recentIssues}`,
     `需要处理 ${summary.states.needs_action}  |  等待上游 ${summary.states.waiting_upstream}  |  进行中 ${summary.states.active}  |  已完成 ${summary.states.completed}`,
-    `未指派候选 ${summary.signals.unassigned}  |  适合首次贡献 ${summary.signals.good_first_issue}  |  欢迎协助 ${summary.signals.help_wanted}`,
+    `未指派 ${summary.signals.unassigned}  |  已有开放 PR ${summary.signals.linked_pull_request}  |  贡献友好 ${summary.signals.good_first_issue + summary.signals.help_wanted}`,
     `同步状态 ${summary.syncStatus}${summary.warnings.length ? `  |  警告 ${summary.warnings.length}` : ""}`,
   ].join("\n");
 }
@@ -336,6 +336,11 @@ function humanIssues(issues: RecentIssue[]): string {
     },
     { header: "标题", value: (issue) => issue.title, maxWidth: 44 },
     {
+      header: "开放PR",
+      value: (issue) => issue.linkedPullRequests.length,
+      align: "right",
+    },
+    {
       header: "评论",
       value: (issue) => issue.comments,
       align: "right",
@@ -392,11 +397,21 @@ function humanLocated(located: LocatedItem): string {
       ["作者", issue.author],
       ["公开信号", signalSummary(issue)],
       ["指派", issue.assignees.join(", ") || "暂无"],
+      [
+        "关联 PR",
+        issue.linkedPullRequests.length > 0
+          ? issue.linkedPullRequests
+              .map((pull) => `${pull.repository}#${pull.number}`)
+              .join(", ")
+          : issue.linkedPullRequestStatus === "checked"
+            ? "未发现开放 PR"
+            : "未知",
+      ],
       ["标签", issue.labels.join(", ") || "暂无"],
       ["评论", issue.comments],
       ["更新", `${relativeTime(issue.updatedAt)} / ${issue.updatedAt}`],
       ["URL", issue.url],
-      ["提示", "公开信号不代表 Issue 确定无人处理或一定接受外部 PR。"],
+      ["提示", "指派和关联 PR 只是筛选证据，不代表允许开始或保证接受。"],
     ]);
   }
   const item = located.item;

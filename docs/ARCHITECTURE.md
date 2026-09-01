@@ -80,8 +80,11 @@ GitHub text is rendered as text, not raw HTML. The interface uses a stable
 desktop grid and responsive mobile list, actual repository avatars, project and
 queue navigation, composite filters, detail views, command search, theme
 selection, and safe external links. Simplified Chinese is the default UI. A
-separate recent-issue view filters public assignment and contribution-label
-signals without interpreting them as ownership or acceptance.
+separate recent-issue view filters public assignment, open linked-PR, and
+contribution-label signals without interpreting them as ownership or
+acceptance. After candidate sorting and truncation, the collector performs a
+bounded, paginated Timeline lookup for open PR cross-references. Candidates
+outside that bound preserve an explicit not-checked relationship state.
 
 The frontend has no GitHub write operation. Reloading a static snapshot keeps
 the snapshot as its baseline and directly refreshes up to 10 recent open pull

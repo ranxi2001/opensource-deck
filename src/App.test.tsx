@@ -179,6 +179,16 @@ describe("App", () => {
         "Correct broken links in the memory systems chapter",
       ),
     ).toBeNull();
+    expect(within(table).getByText("PR #5120 · community-user")).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: /已有 PR/ }));
+    expect(
+      within(table).getByText(
+        "Improve error details when a workflow configuration is invalid",
+      ),
+    ).toBeVisible();
+    expect(
+      within(table).queryByText("Document the local snapshot cleanup workflow"),
+    ).toBeNull();
   });
 
   it("refreshes current-head CI without replacing the deployed snapshot", async () => {

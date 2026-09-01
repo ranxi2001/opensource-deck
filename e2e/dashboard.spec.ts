@@ -33,6 +33,11 @@ test("desktop workspace supports filtering, details, and command search", async 
     page.getByRole("complementary", { name: "贡献详情" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: /近期 Issue/ }).click();
+  await page.getByRole("tab", { name: /已有 PR/ }).click();
+  await expect(
+    page.getByRole("link", { name: "PR #5120 · community-user" }),
+  ).toBeVisible();
   await page.keyboard.press("Control+k");
   await expect(
     page.getByRole("dialog", { name: "查找项目和贡献" }),
@@ -70,6 +75,8 @@ test("mobile workspace has no page overflow and exposes project navigation", asy
       .locator(".mobile-decorators")
       .getByTitle("可合并状态：可合并"),
   ).toBeVisible();
+  await page.getByRole("button", { name: /近期 Issue/ }).click();
+  await expect(page.getByText("已有开放 PR").first()).toBeVisible();
   await page.getByRole("button", { name: "打开项目列表" }).click();
   const projects = page.getByRole("complementary", { name: "项目" });
   await expect(projects).toBeVisible();

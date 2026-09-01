@@ -76,6 +76,40 @@ function fetcher(privateRepository: boolean): typeof fetch {
         },
       ]);
     }
+    if (url.pathname === "/repos/acme/demo/issues/12/timeline") {
+      return response([
+        {
+          event: "cross-referenced",
+          source: {
+            issue: {
+              html_url: "https://github.com/acme/demo/pull/18",
+              repository_url: "https://api.github.com/repos/acme/demo",
+              number: 18,
+              title: "Add the contributor-friendly example",
+              user: { login: "contributor" },
+              state: "open",
+              pull_request: { merged_at: null },
+              draft: false,
+            },
+          },
+        },
+        {
+          event: "cross-referenced",
+          source: {
+            issue: {
+              html_url: "https://github.com/acme/demo/pull/17",
+              repository_url: "https://api.github.com/repos/acme/demo",
+              number: 17,
+              title: "Closed attempt",
+              user: { login: "past-contributor" },
+              state: "closed",
+              pull_request: { merged_at: null },
+              draft: false,
+            },
+          },
+        },
+      ]);
+    }
     if (url.pathname === "/repos/acme/demo/issues/7/comments") {
       return response([
         {
@@ -156,8 +190,16 @@ describe("collectDashboard", () => {
     expect(dashboard.items[0]?.state).toBe("needs_action");
     expect(dashboard.recentIssues).toHaveLength(1);
     expect(dashboard.recentIssues[0]?.signals).toEqual(
-      expect.arrayContaining(["unassigned", "good_first_issue"]),
+      expect.arrayContaining([
+        "linked_pull_request",
+        "unassigned",
+        "good_first_issue",
+      ]),
     );
+    expect(dashboard.recentIssues[0]?.linkedPullRequests).toEqual([
+      expect.objectContaining({ number: 18, author: "contributor" }),
+    ]);
+    expect(dashboard.recentIssues[0]?.linkedPullRequestStatus).toBe("checked");
     expect(dashboard.warnings.join(" ")).toContain("20 个近期活跃仓库");
     expect(dashboard.warnings.join(" ")).toContain("作者或 Reviewer");
   });

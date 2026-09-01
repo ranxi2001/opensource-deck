@@ -100,9 +100,10 @@ Waiting upstream.
 
 Recent-issue discovery scans the first 8 of those repositories. Authenticated
 collection scans up to 20 repositories. Candidates use only public signals such
-as assignees, `good first issue`, and `help wanted`. An unassigned issue is not
-guaranteed to be unclaimed; check its discussion and contribution policy before
-starting work.
+as assignees, open linked pull requests, `good first issue`, and `help wanted`.
+Unassigned means only that GitHub reports no Assignee; the UI also shows open
+PR activity when the bounded relationship check finds it. Check the discussion,
+overlapping PRs, and contribution policy before starting work.
 
 The deployed snapshot for the repository owner is generated hourly by GitHub
 Actions with the repository-scoped `GITHUB_TOKEN`. It contains public data only.

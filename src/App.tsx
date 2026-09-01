@@ -4,7 +4,6 @@ import {
   GitPullRequest,
   Lightbulb,
   LoaderCircle,
-  UserRoundCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommandPalette } from "./components/CommandPalette";
@@ -94,8 +93,8 @@ function DashboardSummary({
     const issues = data.recentIssues.filter((issue) =>
       inProject(issue.repository),
     );
-    const unassigned = issues.filter((issue) =>
-      issue.signals.includes("unassigned"),
+    const linkedPullRequests = issues.filter((issue) =>
+      issue.signals.includes("linked_pull_request"),
     ).length;
     const contributionLabels = issues.filter((issue) =>
       issue.signals.some((signal) =>
@@ -127,9 +126,9 @@ function DashboardSummary({
             <span>近期 Issue</span>
           </div>
           <div>
-            <UserRoundCheck size={16} />
-            <strong>{unassigned}</strong>
-            <span>未指派</span>
+            <GitPullRequest size={16} />
+            <strong>{linkedPullRequests}</strong>
+            <span>已有开放 PR</span>
           </div>
           <div>
             <Lightbulb size={16} />
@@ -316,6 +315,9 @@ export default function App() {
         issue.signals.some((signal) =>
           ["good_first_issue", "help_wanted"].includes(signal),
         ),
+      ).length,
+      linked_pull_request: scoped.filter((issue) =>
+        issue.signals.includes("linked_pull_request"),
       ).length,
       assigned: scoped.filter((issue) => issue.signals.includes("assigned"))
         .length,

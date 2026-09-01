@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Recent Issue discovery now distinguishes an empty Assignee list from active
+  implementation work by collecting and displaying bounded open linked-PR
+  evidence with explicit unknown states.
+
 ## [0.1.1] - 2026-09-01
 
 ### Added

@@ -131,12 +131,22 @@ export const projectSchema = z.object({
 });
 
 export const issueSignalSchema = z.enum([
+  "linked_pull_request",
   "unassigned",
   "assigned",
   "good_first_issue",
   "help_wanted",
   "needs_triage",
 ]);
+
+export const linkedPullRequestSchema = z.object({
+  repository: z.string().regex(/^[^/]+\/[^/]+$/),
+  number: z.number().int().positive(),
+  url: z.string().url(),
+  title: z.string().min(1),
+  author: z.string().min(1),
+  draft: z.boolean(),
+});
 
 export const recentIssueSchema = z.object({
   id: z.string().min(1),
@@ -151,6 +161,10 @@ export const recentIssueSchema = z.object({
   assignees: z.array(z.string()),
   comments: z.number().int().nonnegative(),
   signals: z.array(issueSignalSchema).min(1),
+  linkedPullRequests: z.array(linkedPullRequestSchema).default([]),
+  linkedPullRequestStatus: z
+    .enum(["checked", "partial", "not_checked", "unavailable"])
+    .default("not_checked"),
 });
 
 export const dashboardDataSchema = z.object({
@@ -219,6 +233,7 @@ export type Activity = z.infer<typeof activitySchema>;
 export type WorkItem = z.infer<typeof workItemSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type IssueSignal = z.infer<typeof issueSignalSchema>;
+export type LinkedPullRequest = z.infer<typeof linkedPullRequestSchema>;
 export type RecentIssue = z.infer<typeof recentIssueSchema>;
 export type DashboardData = z.infer<typeof dashboardDataSchema>;
 export type DeckConfigFile = z.infer<typeof deckConfigFileSchema>;

@@ -8,7 +8,11 @@ interface RecentIssueToolbarProps {
 }
 
 type RecentIssueToolbarSignal =
-  "all" | "unassigned" | "contribution_label" | "assigned";
+  | "all"
+  | "unassigned"
+  | "contribution_label"
+  | "linked_pull_request"
+  | "assigned";
 
 const options: Array<{
   value: RecentIssueToolbarSignal;
@@ -17,6 +21,7 @@ const options: Array<{
   { value: "all", label: "全部 Issue" },
   { value: "unassigned", label: "未指派" },
   { value: "contribution_label", label: "贡献友好标签" },
+  { value: "linked_pull_request", label: "已有 PR" },
   { value: "assigned", label: "已指派" },
 ];
 
@@ -65,7 +70,7 @@ export function RecentIssueToolbar({
         </label>
         <span className="issue-signal-note">
           <ListFilter size={15} />
-          仅依据公开指派与标签信号
+          仅依据公开指派、关联 PR 与标签信号
         </span>
       </div>
     </div>

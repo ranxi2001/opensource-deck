@@ -73,7 +73,7 @@
 
 在账户面板输入任意 GitHub 用户名，浏览器会匿名、只读地查询近期公开活动。为避免超出 GitHub 匿名 API 限额，实时视图最多读取 20 个近期活跃仓库，并优先为最近更新的 5 个作者或 Reviewer 开放 PR 补充当前 head 的 CI、Review、评论和合并状态。其他事项会明确显示数据不完整，不会把未知状态当作成功或“等待上游”。
 
-近期 Issue 发现会扫描其中前 8 个仓库；认证采集最多扫描 20 个仓库。候选事项只使用 assignee、`good first issue`、`help wanted` 等公开信号。未指派不代表无人处理，开始贡献前仍需查看讨论和项目贡献政策。
+近期 Issue 发现会扫描其中前 8 个仓库；认证采集最多扫描 20 个仓库。候选事项只使用 assignee、开放的关联 PR、`good first issue`、`help wanted` 等公开信号。未指派只表示 GitHub 没有 Assignee；若已有开放 PR，界面会同时显示该实现活动。开始贡献前仍需查看讨论、重叠 PR 和项目贡献政策。
 
 仓库所有者的部署快照由 GitHub Actions 使用仓库级 `GITHUB_TOKEN` 每小时生成，并且只包含公开数据。顶部刷新按钮会保留完整快照和候选 Issue，只重新读取最近 10 个作者或 Reviewer 开放 PR 的当前 head、CI、Review、评论和合并状态。因此上传新 commit 后，可以直接手动刷新跟踪 CI，无需等待下一次 Pages 同步。若重点 PR 超过 10 个，其余项目保留上次同步数据；也可以在 Actions 页面手动运行 **Sync and deploy Pages** 完成全量同步。
 

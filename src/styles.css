@@ -799,9 +799,16 @@ a {
 }
 
 .issue-signals span.signal-unassigned {
-  color: var(--blue);
+  color: color-mix(in srgb, var(--blue) 76%, var(--ink));
   background: var(--blue-soft);
   border-color: color-mix(in srgb, var(--blue) 28%, var(--border));
+}
+
+.issue-signals span.signal-linked_pull_request {
+  color: var(--violet);
+  background: var(--violet-soft);
+  border-color: color-mix(in srgb, var(--violet) 38%, var(--border));
+  border-left-width: 3px;
 }
 
 .issue-participation {
@@ -814,7 +821,8 @@ a {
   font-size: 10px;
 }
 
-.issue-participation > span {
+.issue-participation > span,
+.issue-participation > a {
   min-width: 0;
   display: flex;
   align-items: center;
@@ -822,6 +830,25 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.issue-participation svg {
+  flex: 0 0 auto;
+}
+
+.issue-linked-pr {
+  color: var(--violet);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.issue-linked-pr:hover {
+  text-decoration: underline;
+}
+
+.issue-linked-pr span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .work-header {

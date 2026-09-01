@@ -79,6 +79,12 @@ export function filterRecentIssues(
       issue.author,
       ...issue.labels,
       ...issue.assignees,
+      ...issue.linkedPullRequests.flatMap((pull) => [
+        pull.repository,
+        `#${pull.number}`,
+        pull.title,
+        pull.author,
+      ]),
     ]
       .join(" ")
       .toLocaleLowerCase()

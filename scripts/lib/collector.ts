@@ -11,6 +11,7 @@ import {
   type DashboardData,
   type DeckConfig,
   type IssueSignal,
+  type LinkedPullRequest,
   type RecentIssue,
   type Role,
   type WorkItem,
@@ -45,6 +46,9 @@ const HELP_WANTED_LABELS = new Set(["help wanted", "help-wanted"]);
 const NEEDS_TRIAGE_LABELS = new Set(["needs triage", "needs-triage"]);
 const PUBLIC_LOOKUP_ENRICHMENT_LIMIT = 5;
 const PUBLIC_REFRESH_ENRICHMENT_LIMIT = 10;
+const PUBLIC_LOOKUP_ISSUE_LINK_LIMIT = 3;
+const FULL_ISSUE_LINK_LIMIT = 40;
+const ISSUE_TIMELINE_MAX_PAGES = 2;
 
 function toRecentIssue(item: SearchIssue): RecentIssue {
   const labels = item.labels.map(labelName).filter(Boolean);
@@ -74,6 +78,8 @@ function toRecentIssue(item: SearchIssue): RecentIssue {
     assignees,
     comments: item.comments ?? 0,
     signals,
+    linkedPullRequests: [],
+    linkedPullRequestStatus: "not_checked",
   };
 }
 
@@ -102,6 +108,22 @@ interface SearchResponse {
   total_count: number;
   incomplete_results: boolean;
   items: SearchIssue[];
+}
+
+interface TimelineIssue {
+  html_url?: string;
+  repository_url?: string;
+  number?: number;
+  title?: string;
+  user?: { login: string } | null;
+  state?: "open" | "closed";
+  pull_request?: { merged_at?: string | null };
+  draft?: boolean;
+}
+
+interface TimelineEvent {
+  event: string;
+  source?: { issue?: TimelineIssue };
 }
 
 interface RepositoryResponse {
@@ -175,6 +197,74 @@ function repositoryFromApiUrl(value: string): string {
 
 function labelName(label: SearchIssue["labels"][number]): string {
   return typeof label === "string" ? label : (label.name ?? "");
+}
+
+function linkedPullRequestFromEvent(
+  event: TimelineEvent,
+): LinkedPullRequest | null {
+  const item = event.source?.issue;
+  if (
+    event.event !== "cross-referenced" ||
+    !item?.pull_request ||
+    item.state !== "open" ||
+    !item.repository_url ||
+    !item.html_url ||
+    !item.number ||
+    !item.title
+  ) {
+    return null;
+  }
+  try {
+    return {
+      repository: repositoryFromApiUrl(item.repository_url),
+      number: item.number,
+      url: item.html_url,
+      title: item.title,
+      author: item.user?.login ?? "ghost",
+      draft: item.draft ?? false,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function enrichRecentIssueLinks(
+  client: GitHubClient,
+  issue: RecentIssue,
+): Promise<RecentIssue> {
+  const linked = new Map<string, LinkedPullRequest>();
+  try {
+    let status: RecentIssue["linkedPullRequestStatus"] = "checked";
+    for (let page = 1; page <= ISSUE_TIMELINE_MAX_PAGES; page += 1) {
+      const events = await client.get<TimelineEvent[]>(
+        `/repos/${issue.repository}/issues/${issue.number}/timeline`,
+        { per_page: 100, page },
+      );
+      for (const event of events) {
+        const pull = linkedPullRequestFromEvent(event);
+        if (pull) linked.set(pull.url, pull);
+      }
+      if (events.length < 100) break;
+      if (page === ISSUE_TIMELINE_MAX_PAGES) status = "partial";
+    }
+    const linkedPullRequests = [...linked.values()];
+    return {
+      ...issue,
+      signals:
+        linkedPullRequests.length > 0
+          ? [
+              "linked_pull_request",
+              ...issue.signals.filter(
+                (signal) => signal !== "linked_pull_request",
+              ),
+            ]
+          : issue.signals,
+      linkedPullRequests,
+      linkedPullRequestStatus: status,
+    };
+  } catch {
+    return { ...issue, linkedPullRequestStatus: "unavailable" };
+  }
 }
 
 function defaultChecks(): ChecksSummary {
@@ -763,7 +853,7 @@ export async function collectDashboard(
 
   if (browserLimited) {
     warnings.push(
-      `公开账户查询最多处理 20 个近期活跃仓库，其中前 8 个仓库用于发现候选 Issue；最近更新的 ${PUBLIC_LOOKUP_ENRICHMENT_LIMIT} 个作者或 Reviewer 开放 PR 会补充 CI、审阅和评论数据，其余事项将明确标记为数据不完整。`,
+      `公开账户查询最多处理 20 个近期活跃仓库，其中前 8 个仓库用于发现候选 Issue；最近更新的 ${PUBLIC_LOOKUP_ENRICHMENT_LIMIT} 个作者或 Reviewer 开放 PR 会补充 CI、审阅和评论数据，前 ${PUBLIC_LOOKUP_ISSUE_LINK_LIMIT} 个候选 Issue 会检查关联 PR，其余事项将明确标记为数据不完整。`,
     );
   }
   let enriched: DiscoveredItem[];
@@ -833,7 +923,7 @@ export async function collectDashboard(
       }
     },
   );
-  const recentIssues = recentIssueResults
+  const recentIssueCandidates = recentIssueResults
     .flat()
     .filter((issue) => !knownIssueUrls.has(issue.url))
     .sort(
@@ -842,6 +932,28 @@ export async function collectDashboard(
         new Date(left.updatedAt).valueOf(),
     )
     .slice(0, browserLimited ? 80 : 160);
+  const issueLinkLimit = browserLimited
+    ? PUBLIC_LOOKUP_ISSUE_LINK_LIMIT
+    : FULL_ISSUE_LINK_LIMIT;
+  const issueLinkResults = await mapLimit(
+    recentIssueCandidates.slice(0, issueLinkLimit),
+    browserLimited ? 2 : (options.concurrency ?? 6),
+    (issue) => enrichRecentIssueLinks(client, issue),
+  );
+  const issueLinksById = new Map(
+    issueLinkResults.map((issue) => [issue.id, issue]),
+  );
+  const recentIssues = recentIssueCandidates.map(
+    (issue) => issueLinksById.get(issue.id) ?? issue,
+  );
+  const unavailableIssueLinks = issueLinkResults.filter(
+    (issue) => issue.linkedPullRequestStatus === "unavailable",
+  ).length;
+  if (unavailableIssueLinks > 0) {
+    warnings.push(
+      `${unavailableIssueLinks} 个近期 Issue 的关联 Pull Request 数据不可用。`,
+    );
+  }
   const profile = await client.get<UserResponse>(`/users/${user}`);
   const result: DashboardData = {
     schemaVersion: "1.0",

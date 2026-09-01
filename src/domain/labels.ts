@@ -63,6 +63,7 @@ export const MERGE_LABELS: Record<WorkItem["mergeable"], string> = {
 };
 
 export const ISSUE_SIGNAL_LABELS: Record<IssueSignal, string> = {
+  linked_pull_request: "已有开放 PR",
   unassigned: "未指派",
   assigned: "已指派",
   good_first_issue: "适合首次贡献",

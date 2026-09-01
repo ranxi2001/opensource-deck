@@ -563,7 +563,18 @@
       "labels": ["help wanted", "backend"],
       "assignees": [],
       "comments": 3,
-      "signals": ["unassigned", "help_wanted"]
+      "signals": ["linked_pull_request", "unassigned", "help_wanted"],
+      "linkedPullRequests": [
+        {
+          "repository": "bytedance/deer-flow",
+          "number": 5120,
+          "url": "https://github.com/bytedance/deer-flow/pull/5120",
+          "title": "Improve workflow configuration error details",
+          "author": "community-user",
+          "draft": false
+        }
+      ],
+      "linkedPullRequestStatus": "checked"
     },
     {
       "id": "sample-recent-agentenv-241",
@@ -577,7 +588,9 @@
       "labels": ["good first issue", "documentation"],
       "assignees": [],
       "comments": 1,
-      "signals": ["unassigned", "good_first_issue"]
+      "signals": ["unassigned", "good_first_issue"],
+      "linkedPullRequests": [],
+      "linkedPullRequestStatus": "checked"
     },
     {
       "id": "sample-recent-openviking-377",
@@ -591,7 +604,9 @@
       "labels": ["enhancement", "needs-triage"],
       "assignees": [],
       "comments": 5,
-      "signals": ["unassigned", "needs_triage"]
+      "signals": ["unassigned", "needs_triage"],
+      "linkedPullRequests": [],
+      "linkedPullRequestStatus": "checked"
     },
     {
       "id": "sample-recent-book-631",
@@ -605,7 +620,9 @@
       "labels": ["help wanted", "documentation"],
       "assignees": ["maintainer"],
       "comments": 2,
-      "signals": ["assigned", "help_wanted"]
+      "signals": ["assigned", "help_wanted"],
+      "linkedPullRequests": [],
+      "linkedPullRequestStatus": "checked"
     }
   ],
   "syncStatus": "sample",

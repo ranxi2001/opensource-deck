@@ -31,6 +31,7 @@ osdeck work --state needs_action --json
 osdeck work --project owner/repo --json
 osdeck issues --signal contribution_label --json
 osdeck issues --signal unassigned --project owner/repo --json
+osdeck issues --signal linked_pull_request --json
 osdeck show 'owner/repo#123' --json
 osdeck url 'owner/repo#123'
 ```
@@ -49,9 +50,11 @@ Treat OpenSourceDeck state as navigation evidence, not authority:
 
 - `needs_action` and `waiting_upstream` are deterministic dashboard states;
   report their reason codes and source facts when the distinction matters.
-- `unassigned`, `good_first_issue`, and `help_wanted` are public screening
-  signals. They do not prove that nobody is working on the Issue or that a pull
-  request will be accepted.
+- `unassigned`, `linked_pull_request`, `good_first_issue`, and `help_wanted` are
+  public screening signals. `unassigned` means only that the Assignee list is
+  empty. Check `linkedPullRequestStatus` before treating an empty
+  `linkedPullRequests` array as evidence that no open PR was found. None of
+  these signals proves that a pull request will be accepted.
 - Before recommending or starting a candidate, inspect the live GitHub Issue,
   current assignees, recent comments, linked or overlapping pull requests, and
   repository contribution instructions.

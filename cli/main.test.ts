@@ -92,6 +92,28 @@ describe("OpenSourceDeck CLI", () => {
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]?.signals).toContain("good_first_issue");
 
+    const linkedOutput = capture();
+    expect(
+      await runCli(
+        [
+          "issues",
+          "--source",
+          sample,
+          "--signal",
+          "linked_pull_request",
+          "--json",
+        ],
+        linkedOutput.runtime,
+      ),
+    ).toBe(0);
+    const linkedResult = JSON.parse(linkedOutput.stdout()) as {
+      issues: Array<{ number: number; linkedPullRequests: unknown[] }>;
+    };
+    expect(linkedResult.issues).toEqual([
+      expect.objectContaining({ number: 5101 }),
+    ]);
+    expect(linkedResult.issues[0]?.linkedPullRequests).toHaveLength(1);
+
     const urlOutput = capture();
     expect(
       await runCli(
