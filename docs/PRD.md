@@ -244,6 +244,7 @@ Classification is deterministic and follows this precedence:
    - the user is explicitly requested as a reviewer;
    - the user is assigned and the item has a newer external activity;
    - the user is directly mentioned in a newer external activity;
+   - an item the user participated in has a newer external activity;
    - the user's pull request has a confirmed merge conflict.
 4. An open item is `waiting_upstream` when the latest relevant activity is by
    the configured user and no higher-priority trigger applies.
@@ -511,8 +512,9 @@ OAuth and session secrets are not available to the Pages workflow.
 - Manual `workflow_dispatch` is available.
 - In the browser, refreshing a deployed snapshot preserves the snapshot and
   candidate issues, then performs bounded anonymous enrichment for up to 10
-  recent open pull requests where the displayed user is an author or reviewer.
-  It updates current-head CI, reviews, comments, merge state, and action
+  recent open pull requests where the displayed user is an author or reviewer
+  and up to 5 recently active open Issues where the user participated. It
+  updates current-head CI, reviews, comments, merge state, and action
   classification without waiting for Pages.
 - Public refresh failures retain the last known CI and review data. Missing
   activity timelines remain unknown and must not be classified as Waiting

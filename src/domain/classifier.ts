@@ -71,6 +71,13 @@ export function classifyWorkItem(input: ClassificationInput): Classification {
   ) {
     reasons.push("mentioned_external_update");
   }
+  if (
+    input.roles.includes("involved") &&
+    input.latestActivity &&
+    !input.latestActivity.byUser
+  ) {
+    reasons.push("involved_external_update");
+  }
   if (input.warnings.length > 0) reasons.push("data_incomplete");
 
   const now = input.now ?? new Date();
@@ -94,6 +101,7 @@ export function classifyWorkItem(input: ClassificationInput): Classification {
       "review_requested",
       "assigned_external_update",
       "mentioned_external_update",
+      "involved_external_update",
       "merge_conflict",
     ].includes(reason),
   );

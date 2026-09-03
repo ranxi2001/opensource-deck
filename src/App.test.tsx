@@ -222,12 +222,16 @@ describe("App", () => {
           "/search/issues",
         ),
       );
-    expect(searchRequests).toHaveLength(1);
+    expect(searchRequests).toHaveLength(2);
     expect(
-      new URL(
-        String(searchRequests[0]?.[0]),
-        window.location.origin,
-      ).searchParams.get("q"),
-    ).toBe("involves:ranxi2001 is:pr is:open");
+      searchRequests.map(([input]) =>
+        new URL(String(input), window.location.origin).searchParams.get("q"),
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        "involves:ranxi2001 is:pr is:open",
+        "involves:ranxi2001 is:issue is:open",
+      ]),
+    );
   });
 });

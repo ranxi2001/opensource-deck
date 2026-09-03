@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- External replies on open Issues the user participated in now enter Needs
+  action, and bounded browser refresh checks recent participating Issues rather
+  than waiting for the next Pages sync.
 - Recent Issue discovery now distinguishes an empty Assignee list from active
   implementation work by collecting and displaying bounded open linked-PR
   evidence with explicit unknown states.

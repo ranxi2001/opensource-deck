@@ -46,6 +46,7 @@ const HELP_WANTED_LABELS = new Set(["help wanted", "help-wanted"]);
 const NEEDS_TRIAGE_LABELS = new Set(["needs triage", "needs-triage"]);
 const PUBLIC_LOOKUP_ENRICHMENT_LIMIT = 5;
 const PUBLIC_REFRESH_ENRICHMENT_LIMIT = 10;
+const PUBLIC_REFRESH_ISSUE_LIMIT = 5;
 const PUBLIC_LOOKUP_ISSUE_LINK_LIMIT = 3;
 const FULL_ISSUE_LINK_LIMIT = 40;
 const ISSUE_TIMELINE_MAX_PAGES = 2;
@@ -710,6 +711,30 @@ function selectPriorityPublicPulls(
     .slice(0, limit);
 }
 
+function isPriorityPublicIssue(item: DiscoveredItem): boolean {
+  return (
+    item.sourceState === "open" &&
+    item.type === "issue" &&
+    item.roles.some((role) =>
+      ["author", "assignee", "mentioned", "involved"].includes(role),
+    )
+  );
+}
+
+function selectPriorityPublicIssues(
+  items: DiscoveredItem[],
+  limit: number,
+): DiscoveredItem[] {
+  return items
+    .filter(isPriorityPublicIssue)
+    .sort(
+      (left, right) =>
+        new Date(right.updatedAt).valueOf() -
+        new Date(left.updatedAt).valueOf(),
+    )
+    .slice(0, limit);
+}
+
 function withoutPublicEnrichment(item: DiscoveredItem): DiscoveredItem {
   if (item.sourceState !== "open") return item;
   return {
@@ -986,6 +1011,7 @@ export interface RefreshPublicDashboardOptions {
   now?: Date;
   concurrency?: number;
   enrichmentLimit?: number;
+  issueEnrichmentLimit?: number;
 }
 
 export async function refreshPublicDashboard(
@@ -998,47 +1024,70 @@ export async function refreshPublicDashboard(
 
   const now = options.now ?? new Date();
   const limit = options.enrichmentLimit ?? PUBLIC_REFRESH_ENRICHMENT_LIMIT;
+  const issueLimit = options.issueEnrichmentLimit ?? PUBLIC_REFRESH_ISSUE_LIMIT;
   const warnings: string[] = [];
-  let currentUpdates = new Map<string, string>();
-  try {
-    const response = await client.get<SearchResponse>("/search/issues", {
-      q: `involves:${dashboard.sourceUser.login} is:pr is:open`,
-      per_page: 100,
-      page: 1,
-      sort: "updated",
-      order: "desc",
-    });
-    currentUpdates = new Map(
-      response.items.map((item) => [
-        item.node_id || String(item.id),
-        item.updated_at,
-      ]),
-    );
-    if (
-      response.incomplete_results ||
-      response.total_count > response.items.length
-    ) {
-      warnings.push(
-        "重点 Pull Request 排序结果不完整，未列出的项目按上次同步时间排序。",
+  async function currentUpdateTimes(
+    type: "pr" | "issue",
+    label: string,
+  ): Promise<Map<string, string>> {
+    try {
+      const response = await client.get<SearchResponse>("/search/issues", {
+        q: `involves:${dashboard.sourceUser.login} is:${type} is:open`,
+        per_page: 100,
+        page: 1,
+        sort: "updated",
+        order: "desc",
+      });
+      if (
+        response.incomplete_results ||
+        response.total_count > response.items.length
+      ) {
+        warnings.push(
+          `${label}排序结果不完整，未列出的项目按上次同步时间排序。`,
+        );
+      }
+      return new Map(
+        response.items.map((item) => [
+          item.node_id || String(item.id),
+          item.updated_at,
+        ]),
       );
+    } catch (error) {
+      warnings.push(
+        `${label}排序不可用：${error instanceof Error ? error.message : "未知错误"}`,
+      );
+      return new Map();
     }
-  } catch (error) {
-    warnings.push(
-      `重点 Pull Request 排序不可用：${error instanceof Error ? error.message : "未知错误"}`,
-    );
   }
+  const [currentPullUpdates, currentIssueUpdates] = await Promise.all([
+    currentUpdateTimes("pr", "重点 Pull Request"),
+    currentUpdateTimes("issue", "已参与 Issue"),
+  ]);
   const priorityCandidates = dashboard.items
     .filter(isPriorityPublicPull)
     .map((item) => ({
       ...item,
-      updatedAt: currentUpdates.get(item.id) ?? item.updatedAt,
+      updatedAt: currentPullUpdates.get(item.id) ?? item.updatedAt,
     }));
   const priorityItems = selectPriorityPublicPulls(priorityCandidates, limit);
+  const issueCandidates = dashboard.items
+    .filter(isPriorityPublicIssue)
+    .map((item) => ({
+      ...item,
+      updatedAt: currentIssueUpdates.get(item.id) ?? item.updatedAt,
+    }));
+  const priorityIssues = selectPriorityPublicIssues(
+    issueCandidates,
+    issueLimit,
+  );
   warnings.unshift(
-    `本次公开刷新更新了 ${priorityItems.length} 个作者或 Reviewer 开放 PR；项目发现、普通 Issue 和候选 Issue 保留上次 Pages 同步数据。`,
+    `本次公开刷新更新了 ${priorityItems.length} 个作者或 Reviewer 开放 PR，以及 ${priorityIssues.length} 个最近活跃的已参与 Issue；项目发现和候选 Issue 保留上次 Pages 同步数据。`,
   );
   const refreshed = await mapLimit(
-    priorityItems.map((item) => ({ ...item, warnings: [] })),
+    [...priorityItems, ...priorityIssues].map((item) => ({
+      ...item,
+      warnings: [],
+    })),
     options.concurrency ?? 4,
     (item) => enrichItem(client, item, dashboard.sourceUser.login),
   );
@@ -1084,6 +1133,11 @@ export async function refreshPublicDashboard(
   if (priorityCandidates.length > priorityItems.length) {
     warnings.push(
       `本次公开刷新优先更新了最近 ${priorityItems.length} 个作者或 Reviewer 开放 PR；其余重点 PR 保留上次同步数据。`,
+    );
+  }
+  if (issueCandidates.length > priorityIssues.length) {
+    warnings.push(
+      `本次公开刷新优先更新了最近 ${priorityIssues.length} 个已参与开放 Issue；其余 Issue 保留上次同步数据。`,
     );
   }
 

@@ -32,6 +32,7 @@ export const reasonCodeSchema = z.enum([
   "review_requested",
   "assigned_external_update",
   "mentioned_external_update",
+  "involved_external_update",
   "merge_conflict",
   "last_activity_by_user",
   "open_unowned",

@@ -88,12 +88,14 @@ outside that bound preserve an explicit not-checked relationship state.
 
 The frontend has no GitHub write operation. Reloading a static snapshot keeps
 the snapshot as its baseline and directly refreshes up to 10 recent open pull
-requests where the user is an author or reviewer. This updates current-head CI,
-reviews, comments, and merge state without discarding other enriched work or
-candidate issues. Subsequent public-account lookups and private reloads re-fetch
-their active source. Failures preserve the last known CI and review values,
-mark action ownership incomplete when its timeline is unavailable, and retain
-the last successful dashboard behind a visible status banner.
+requests where the user is an author or reviewer plus 5 recently active open
+Issues where the user participated. This updates current-head CI, reviews,
+comments, merge state, and action classification without discarding other
+enriched work or candidate issues. Subsequent public-account lookups and
+private reloads re-fetch their active source. Failures preserve the last known
+CI and review values, mark action ownership incomplete when its timeline is
+unavailable, and retain the last successful dashboard behind a visible status
+banner.
 
 ## CLI And Agent Skill
 

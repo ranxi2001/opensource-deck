@@ -32,6 +32,7 @@ export const REASON_LABELS: Record<ReasonCode, string> = {
   review_requested: "有人请求你进行审阅",
   assigned_external_update: "已指派项目出现了新的外部活动",
   mentioned_external_update: "提及你的项目出现了新的外部活动",
+  involved_external_update: "你参与的项目出现了新的外部活动",
   merge_conflict: "Pull Request 存在合并冲突",
   last_activity_by_user: "最近一次可见相关活动来自你",
   open_unowned: "尚未确认下一步由谁处理",

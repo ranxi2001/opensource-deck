@@ -109,11 +109,11 @@ The deployed snapshot for the repository owner is generated hourly by GitHub
 Actions with the repository-scoped `GITHUB_TOKEN`. It contains public data only.
 The header refresh button preserves the full snapshot and candidate issues,
 then refreshes the current head, CI, reviews, comments, and merge state for up
-to 10 recent open pull requests where the user is an author or reviewer. A new
-commit can therefore be tracked immediately without waiting for the next Pages
-sync. When more than 10 priority pull requests are open, the remainder keep the
-last snapshot data; manually running **Sync and deploy Pages** performs a full
-sync.
+to 10 recent open pull requests where the user is an author or reviewer, plus
+new comments for 5 recently active open Issues where the user participated. A
+new commit or Issue reply can therefore be tracked without waiting for the next
+Pages sync. Items outside the bounded refresh keep the last snapshot data;
+manually running **Sync and deploy Pages** performs a full sync.
 
 ### GitHub Login And Private Repositories
 

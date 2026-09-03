@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectDashboard, refreshPublicDashboard } from "./collector";
 import { GitHubClient } from "./github";
-import type { DeckConfig } from "../../src/domain/schema";
+import type { DeckConfig, WorkItem } from "../../src/domain/schema";
 
 const config: DeckConfig = {
   schemaVersion: 1,
@@ -29,7 +29,8 @@ function fetcher(privateRepository: boolean): typeof fetch {
       const query = url.searchParams.get("q") ?? "";
       const include =
         query.startsWith("author:octocat is:pr") ||
-        query.startsWith("involves:octocat");
+        query.startsWith("involves:octocat is:pr") ||
+        query.startsWith("involves:octocat is:open");
       return response({
         total_count: include ? 1 : 0,
         incomplete_results: false,
@@ -227,7 +228,7 @@ describe("collectDashboard", () => {
       "/repos/acme/demo/commits/current-head/check-runs",
     );
     expect(requests.filter((path) => path === "/search/issues")).toHaveLength(
-      1,
+      2,
     );
     expect(refreshed.items[0]?.checks.status).toBe("failure");
     expect(refreshed.recentIssues).toEqual(initial.recentIssues);
@@ -236,6 +237,99 @@ describe("collectDashboard", () => {
       "候选 Issue 保留上次 Pages 同步数据",
     );
     expect(refreshed.generatedAt).toBe("2026-08-30T03:00:00.000Z");
+  });
+
+  it("refreshes external comments on recently active participating issues", async () => {
+    const initial = await collectDashboard({
+      client: new GitHubClient({ fetcher: fetcher(false) }),
+      config,
+      now: new Date("2026-08-30T00:00:00.000Z"),
+      collectionMode: "public_browser",
+    });
+    const baseItem = initial.items[0] as WorkItem;
+    const participatingIssue: WorkItem = {
+      ...baseItem,
+      id: "I_node_42",
+      url: "https://github.com/acme/demo/issues/42",
+      number: 42,
+      type: "issue",
+      title: "Discuss a proposed implementation",
+      author: "maintainer",
+      state: "waiting_upstream",
+      reasonCodes: ["last_activity_by_user"],
+      roles: ["involved"],
+      updatedAt: "2026-08-29T12:00:00.000Z",
+      mergeable: "not_applicable",
+      reviewDecision: "none",
+      checks: {
+        status: "unavailable",
+        total: 0,
+        success: 0,
+        failure: 0,
+        pending: 0,
+        jobs: [],
+      },
+      latestActivity: {
+        actor: "octocat",
+        at: "2026-08-29T12:00:00.000Z",
+        kind: "commented",
+        byUser: true,
+      },
+      links: {
+        item: "https://github.com/acme/demo/issues/42",
+        repository: "https://github.com/acme/demo",
+        actions: "https://github.com/acme/demo/actions",
+      },
+    };
+    const refreshFetcher = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/search/issues") {
+        const query = url.searchParams.get("q") ?? "";
+        return response({
+          total_count: query.includes("is:issue") ? 1 : 0,
+          incomplete_results: false,
+          items: query.includes("is:issue")
+            ? [
+                {
+                  id: 42,
+                  node_id: "I_node_42",
+                  updated_at: "2026-09-03T02:52:16.000Z",
+                },
+              ]
+            : [],
+        });
+      }
+      if (url.pathname === "/repos/acme/demo/issues/42/comments") {
+        return response([
+          {
+            user: { login: "octocat" },
+            created_at: "2026-08-29T12:00:00.000Z",
+            updated_at: "2026-08-29T12:00:00.000Z",
+          },
+          {
+            user: { login: "now-ing" },
+            created_at: "2026-09-03T02:52:16.000Z",
+            updated_at: "2026-09-03T02:52:16.000Z",
+          },
+        ]);
+      }
+      throw new Error(`Unexpected test request: ${url.pathname}`);
+    }) as typeof fetch;
+
+    const refreshed = await refreshPublicDashboard({
+      client: new GitHubClient({ fetcher: refreshFetcher }),
+      dashboard: { ...initial, items: [participatingIssue] },
+      now: new Date("2026-09-03T03:00:00.000Z"),
+    });
+
+    expect(refreshed.items[0]).toMatchObject({
+      id: "I_node_42",
+      updatedAt: "2026-09-03T02:52:16.000Z",
+      state: "needs_action",
+      reasonCodes: ["involved_external_update"],
+      latestActivity: { actor: "now-ing", byUser: false },
+    });
+    expect(refreshed.warnings[0]).toContain("1 个最近活跃的已参与 Issue");
   });
 
   it("drops private repositories unless authenticated mode explicitly allows them", async () => {

@@ -102,6 +102,24 @@ describe("classifyWorkItem", () => {
     });
   });
 
+  it("surfaces external activity after the user participated", () => {
+    expect(
+      classifyWorkItem({
+        ...base,
+        roles: ["involved"],
+        latestActivity: {
+          actor: "maintainer",
+          at: "2026-08-29T18:00:00.000Z",
+          kind: "commented",
+          byUser: false,
+        },
+      }),
+    ).toEqual({
+      state: "needs_action",
+      reasonCodes: ["involved_external_update"],
+    });
+  });
+
   it("does not turn missing enrichment into success", () => {
     expect(
       classifyWorkItem({
